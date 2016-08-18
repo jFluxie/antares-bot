@@ -8,6 +8,7 @@ package com.mycompany.antaresbot;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.MessageBuilder;
 
 /**
  *
@@ -19,7 +20,7 @@ public class Bot {
     
     public static void main(String[] args) throws DiscordException {
         client = new ClientBuilder().withToken("MjE1ODc4MTk1NjUwNjI1NTM3.Cpd7xQ.Vm-ykhXZXig2IBSWISAuYSnipGk").login();
-
+        client.getDispatcher().registerListener(new AnnotationListener());
     }
     
 }
