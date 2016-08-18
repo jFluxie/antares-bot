@@ -26,6 +26,8 @@ public class AnnotationListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event){ 
         RequestBuffer.request(()-> {
+            
+            System.out.println(event.getMessage().getChannel());
         try {  
             
             if(!event.getMessage().getAuthor().getName().equals("jFluxie"))
@@ -46,20 +48,21 @@ public class AnnotationListener {
         );
         
     }
-    /*
+    
     @EventSubscriber
     public void onReady(ReadyEvent event){ 
         RequestBuffer.request(()-> {
         
             try {
-                new MessageBuilder(Bot.client).withContent("Hi there, my name is antares-bot. Im here to mute you all :D")..build();
+                new MessageBuilder(Bot.client).withChannel("182651110756974592").withContent("@here Hello everyone my name is Antares, if you need anything from me type !help").build();
             } catch (RateLimitException | DiscordException | MissingPermissionsException ex) {
                 Logger.getLogger(AnnotationListener.class.getName()).log(Level.SEVERE, null, ex);
+                
             }
         }
         );
     
     }
-*/
+
 }
 
