@@ -5,10 +5,20 @@
  */
 package com.mycompany.antaresbot;
 
+import sx.blah.discord.api.events.EventSubscriber;
+import sx.blah.discord.handle.impl.events.ReadyEvent;
+
 /**
  *
  * @author JORGE VILLAREAL
  */
 public class AnnotationListener {
+    
+    @EventSubscriber
+    
+    public void onReady(ReadyEvent event){
+    
+    
+    }
     
 }
