@@ -5,6 +5,7 @@
  */
 package com.mycompany.antaresbot;
 
+import java.time.LocalDateTime;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sx.blah.discord.api.events.Event;
@@ -14,6 +15,8 @@ import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.UserJoinEvent;
 import sx.blah.discord.handle.impl.events.UserLeaveEvent;
+import sx.blah.discord.handle.impl.obj.Message;
+import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -26,16 +29,18 @@ import sx.blah.discord.util.RequestBuffer;
  */
 public class AnnotationListener {
 
+    /*
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         RequestBuffer.request(() -> {
 
             try {
 
-                if (!event.getMessage().getContent().equals("!help")) {
-
-                    new MessageBuilder(Bot.client).withChannel(event.getMessage().getChannel()).withContent("Calmate bro.").build();
-
+                if (event.getMessage().getContent().equals("help")) {
+                    
+                    IPrivateChannel channel = Bot.client.getOrCreatePMChannel(Bot.client.getUserByID(event.getMessage().getID()));
+                    channel.sendMessage("Hello User");
+                    
                 }
 
             } catch (RateLimitException | DiscordException | MissingPermissionsException ex) {
@@ -47,12 +52,14 @@ public class AnnotationListener {
 
     }
 
+     */
+
     @EventSubscriber
     public void onReady(ReadyEvent event) {
         RequestBuffer.request(() -> {
 
             try {
-                new MessageBuilder(Bot.client).withChannel("182651110756974592").withContent("@here Hello everyone my name is Antares, if you need anything from me type !help").build();
+                new MessageBuilder(Bot.client).withChannel("182651110756974592").withContent("@here Hello everyone my name is Antares, if you need anything from me type !ping").build();
             } catch (RateLimitException | DiscordException | MissingPermissionsException ex) {
                 Logger.getLogger(AnnotationListener.class.getName()).log(Level.SEVERE, null, ex);
 
@@ -92,5 +99,7 @@ public class AnnotationListener {
         );
 
     }
+
+    
 
 }
