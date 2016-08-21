@@ -12,7 +12,7 @@ import sx.blah.discord.util.MessageBuilder;
 
 /**
  *
- * @author JOSE QUIROGA
+ * @author jFluxie
  */
 public class Bot {
 

@@ -11,7 +11,7 @@ import sx.blah.discord.handle.obj.IUser;
 
 /**
  *
- * @author JOSE QUIROGA
+ * @author jFluxie
  */
 public class CommandExecutionEvent extends Event {
 
