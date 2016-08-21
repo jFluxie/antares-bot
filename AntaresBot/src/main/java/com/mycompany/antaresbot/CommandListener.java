@@ -14,6 +14,7 @@ import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 import sx.blah.discord.util.RequestBuffer;
@@ -83,18 +84,37 @@ public class CommandListener {
                 Logger.getLogger(AnnotationListener.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        //TODO
+        
         else if (event.isCommand("join")) {
             
-            System.out.println(event.getMessage().getAuthor().getConnectedVoiceChannels());
+            
             try {
-                if(event.getMessage().getAuthor().getVoiceChannel().equals(null))
+                if(event.getMessage().getAuthor().getConnectedVoiceChannels().size()==0)
                 {
-                
+                    new MessageBuilder(Bot.client).withChannel("182651110756974592").withContent("Im sorry, you are currently not in a channel. Try again.").build();
                 }
                 else
                 {
-                    client.getOurUser().moveToVoiceChannel(event.getMessage().getAuthor().getVoiceChannel().get());   
+                    event.getMessage().getAuthor().getConnectedVoiceChannels().get(0).join();
+                   
+                }
+            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                Logger.getLogger(AnnotationListener.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        else if (event.isCommand("leave")) {
+            
+            
+            try {
+                if(event.getMessage().getAuthor().getConnectedVoiceChannels().size()==0)
+                {
+                    new MessageBuilder(Bot.client).withChannel("182651110756974592").withContent("Im sorry, you are currently not in a channel. Try again.").build();
+                }
+                else
+                {
+                    event.getMessage().getAuthor().getConnectedVoiceChannels().get(0).leave();
+                   
                 }
             } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                 Logger.getLogger(AnnotationListener.class.getName()).log(Level.SEVERE, null, ex);
