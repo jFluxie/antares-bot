@@ -7,6 +7,7 @@ package com.mycompany.antaresbot;
 
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MessageBuilder;
 
@@ -17,16 +18,17 @@ import sx.blah.discord.util.MessageBuilder;
 public class Bot {
 
     public static IDiscordClient client;
-
+        
     public static void main(String[] args) throws DiscordException {
 
-        client = getClient("MjE1ODc4MTk1NjUwNjI1NTM3.Cpd7xQ.Vm-ykhXZXig2IBSWISAuYSnipGk");
-        client.getDispatcher().registerListener(new AnnotationListener());
+        client = getClient("MjE1ODc4MTk1NjUwNjI1NTM3.Cp65dA.o4iFBVaZNu6lJoM1v_pxBS08QG4");
+        new EventListener(client);
         new CommandListener(client);
     }
 
     public static IDiscordClient getClient(String token) throws DiscordException {
         return new ClientBuilder().withToken(token).login();
     }
+    
 
 }

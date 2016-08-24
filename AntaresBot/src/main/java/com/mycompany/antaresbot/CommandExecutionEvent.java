@@ -44,5 +44,10 @@ public class CommandExecutionEvent extends Event {
     public IUser getBy() {
         return by;
     }
+    
+    public String getCommand()
+    {
+        return command;
+    }
 
 }
