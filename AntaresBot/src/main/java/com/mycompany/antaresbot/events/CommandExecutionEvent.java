@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.mycompany.antaresbot;
+package com.mycompany.antaresbot.events;
 
 import sx.blah.discord.api.events.Event;
 import sx.blah.discord.handle.obj.IMessage;

@@ -3,8 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.mycompany.antaresbot;
+package com.mycompany.antaresbot.main;
 
+import com.mycompany.antaresbot.listeners.CommandListener;
+import com.mycompany.antaresbot.listeners.CommandListener;
+import com.mycompany.antaresbot.listeners.EventListener;
+import com.mycompany.antaresbot.listeners.EventListener;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IGuild;
