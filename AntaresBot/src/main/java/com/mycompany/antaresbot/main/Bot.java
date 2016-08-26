@@ -22,17 +22,22 @@ import sx.blah.discord.util.MessageBuilder;
 public class Bot {
 
     public static IDiscordClient client;
-        
+
     public static void main(String[] args) throws DiscordException {
 
         client = getClient("MjE1ODc4MTk1NjUwNjI1NTM3.Cp65dA.o4iFBVaZNu6lJoM1v_pxBS08QG4");
-        new EventListener(client);
+        EventListener eventLis = new EventListener(client);
+        
+        while (!eventLis.getReadyStatus()) {
+            System.out.println("Loading...");
+        }
+        System.out.println("DONE!");
         new CommandListener(client);
+
     }
 
     public static IDiscordClient getClient(String token) throws DiscordException {
         return new ClientBuilder().withToken(token).login();
     }
-    
 
 }

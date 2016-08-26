@@ -24,54 +24,51 @@ import sx.blah.discord.util.RequestBuffer;
  */
 public class EventListener {
     
+    private boolean ready;
+
     public EventListener(IDiscordClient client) {
         client.getDispatcher().registerListener(this);
+        ready=false;
     }
-    
-    
+
     @EventSubscriber
     public void onReady(ReadyEvent event) {
-       /*
-        RequestBuffer.request(() -> {
+
+       
 
             try {
+                ready=true;
                 new MessageBuilder(Bot.client).withChannel("182651110756974592").withContent("@here Hello everyone my name is Antares, if you need anything from me type !help").build();
             } catch (RateLimitException | DiscordException | MissingPermissionsException ex) {
                 Logger.getLogger(EventListener.class.getName()).log(Level.SEVERE, null, ex);
 
             }
-        }
-        );
-*/
-
+       
+            
     }
 
     @EventSubscriber
     public void onChangeGame(StatusChangeEvent event) {
 
-        
-        
         String oldGame = event.getOldStatus().getStatusMessage();
         String newGame = event.getNewStatus().getStatusMessage();
 
         String message;
 
         //User is not in a game at the moment and starts playing
-        if (oldGame==null && newGame!=null) {
+        if (oldGame == null && newGame != null) {
             message = event.getUser() + " has entered " + newGame;
 
-        //User is already in a game and stops playing
-        } else if (oldGame!=null && newGame==null ) {
+            //User is already in a game and stops playing
+        } else if (oldGame != null && newGame == null) {
             message = event.getUser() + " has left " + oldGame;
 
-        //User has two games active at the moment
-        } else if(oldGame!=null && newGame!=null){
+            //User has two games active at the moment
+        } else if (oldGame != null && newGame != null) {
             message = event.getUser() + " has changed from " + oldGame + " to " + newGame;
-        }
-        //We should never enter this place
-        else
-        {
-            message="";
+        } //We should never enter this place
+        else {
+            message = "";
         }
 
         RequestBuffer.request(() -> {
@@ -84,7 +81,12 @@ public class EventListener {
             }
         }
         );
-         
+
     }
     
+    public boolean getReadyStatus()
+    {
+        return ready;
+    }
+
 }
