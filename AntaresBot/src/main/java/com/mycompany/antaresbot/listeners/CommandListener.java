@@ -10,6 +10,11 @@ import com.mycompany.antaresbot.events.CommandExecutionEvent;
 import com.github.axet.vget.VGet;
 import com.github.axet.vget.info.VGetParser;
 import com.github.axet.vget.info.VideoFileInfo;
+import com.github.axet.vget.info.VideoInfo;
+import com.github.axet.vget.vhs.YouTubeInfo.YoutubeQuality;
+import com.github.axet.vget.vhs.YouTubeMPGParser;
+import com.github.axet.vget.vhs.YouTubeQParser;
+import com.github.axet.wget.info.ex.DownloadInterruptedError;
 import static com.mycompany.antaresbot.main.Bot.client;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -22,8 +27,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -65,6 +73,7 @@ public class CommandListener {
         commands.add("join");
         commands.add("leave");
         commands.add("queue");
+        commands.add("queue2");
         commands.add("pause");
         commands.add("resume");
         commands.add("volume");
@@ -162,29 +171,79 @@ public class CommandListener {
                         } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    } else if (event.isCommand("queue")) {
+                    } else if (event.isCommand("queue2")) {
 
-                        try {
+                        /*
+                            String url = "http://www.youtube.com/watch?v=_xEb55dKmlY";
+                            File path = new File("C:\\Users\\Jos\\Documents\\Antares\\Youtube");
+                            
+                            try {
+                            final AtomicBoolean stop = new AtomicBoolean(false);
+
+                            URL web = new URL(url);
+
+                            // [OPTIONAL] limit maximum quality, or do not call this function if
+                            // you wish maximum quality available.
+                            //
+                            // if youtube does not have video with requested quality, program
+                            // will raise en exception.
+                            VGetParser user = null;
+
+                            // create proper html parser depends on url
+                            user = VGet.parser(web);
+
+                            // download limited video quality from youtube
+                            user = new YouTubeQParser(YoutubeQuality.p360);
+                            // download mp4 format only, fail if non exist
+                            user = new YouTubeMPGParser();
+                            // create proper videoinfo to keep specific video information
+                            VideoInfo videoinfo = user.info(web);
+
+                            VGet v = new VGet(videoinfo, path);
+
+                            // [OPTIONAL] call v.extract() only if you d like to get video title
+                            // or download url link before start download. or just skip it.
+                            v.extract();
+
+                            System.out.println("Title: " + videoinfo.getTitle());
+
+                            v.download(user);
                             /*
+                            File source = new File("source.mp4");
+                            File target = new File("target.mp3");
+                            AudioAttributes audio = new AudioAttributes();
+                            audio.setCodec("libmp3lame");
+                            audio.setBitRate(new Integer(128000));
+                            audio.setChannels(new Integer(2));
+                            audio.setSamplingRate(new Integer(44100));
+                            EncodingAttributes attrs = new EncodingAttributes();
+                            attrs.setFormat("mp3");
+                            attrs.setAudioAttributes(audio);
+                            Encoder encoder = new Encoder();
+                            encoder.encode(source, target, attrs);
+                            d
+                         */
+                        //AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\Users\\Jos\\Documents\\Antares\\Youtube\\Of Mice & Men - Second and Sebring (Official Music Video).webm"));
+                        //audioPlayer.queue(stream);
+                        /*
+                            } catch (DownloadInterruptedError e) {
+                            throw e;
+                            } catch (RuntimeException e) {
+                            throw e;
+                            } catch (Exception e) {
+                            throw new RuntimeException(e);
+                            }
+                            
+                         */
+                        //Need to work on this
+                        String command = "ffmpeg -i filename.mp4 filename.mp3";
+
                         try {
-                        String url = "http://www.youtube.com/watch?v=Nj6PFaDmp6c";
-                        String path = "C:\\Users\\Jos\\Videos";
-                        VideoFileInfo info=new VideoFileInfo(new URL("http://www.youtube.com/watch?v=Nj6PFaDmp6c"));
-                        info.
-                        VGet v = new VGet(new URL(url), new File(path));                      
-                        v.download();
-                        v.getv
-                        } catch (Exception e) {
-                        throw new RuntimeException(e);
-                        }
-                             */
-
-                            AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\Users\\Jos\\Videos\\cosmos.mp3"));
-                            audioPlayer.queue(stream);
-
-                        } catch (IOException | UnsupportedAudioFileException ex) {
+                            Process pb = new ProcessBuilder("ffmpeg", "-i", "filename.mp4", "filename.mp3").start();
+                        } catch (IOException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
+
                     } else if (event.isCommand("pause")) {
 
                         try {
