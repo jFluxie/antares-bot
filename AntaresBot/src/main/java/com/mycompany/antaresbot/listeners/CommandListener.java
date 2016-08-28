@@ -73,7 +73,7 @@ public class CommandListener {
         commands.add("join");
         commands.add("leave");
         commands.add("queue");
-        commands.add("queue2");
+        commands.add("skip");
         commands.add("pause");
         commands.add("resume");
         commands.add("volume");
@@ -82,6 +82,7 @@ public class CommandListener {
         //TODO Need to find a way to get default Guild ID.
         audioPlayer = AudioPlayer.getAudioPlayerForGuild(client.getGuildByID("182651110756974592"));
         audioPlayer.setVolume(0.5f);
+
     }
 
     @EventSubscriber
@@ -171,77 +172,53 @@ public class CommandListener {
                         } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    } else if (event.isCommand("queue2")) {
-
-                        /*
-                            String url = "http://www.youtube.com/watch?v=_xEb55dKmlY";
-                            File path = new File("C:\\Users\\Jos\\Documents\\Antares\\Youtube");
-                            
-                            try {
-                            final AtomicBoolean stop = new AtomicBoolean(false);
-
-                            URL web = new URL(url);
-
-                            // [OPTIONAL] limit maximum quality, or do not call this function if
-                            // you wish maximum quality available.
-                            //
-                            // if youtube does not have video with requested quality, program
-                            // will raise en exception.
-                            VGetParser user = null;
-
-                            // create proper html parser depends on url
-                            user = VGet.parser(web);
-
-                            // download limited video quality from youtube
-                            user = new YouTubeQParser(YoutubeQuality.p360);
-                            // download mp4 format only, fail if non exist
-                            user = new YouTubeMPGParser();
-                            // create proper videoinfo to keep specific video information
-                            VideoInfo videoinfo = user.info(web);
-
-                            VGet v = new VGet(videoinfo, path);
-
-                            // [OPTIONAL] call v.extract() only if you d like to get video title
-                            // or download url link before start download. or just skip it.
-                            v.extract();
-
-                            System.out.println("Title: " + videoinfo.getTitle());
-
-                            v.download(user);
-                            /*
-                            File source = new File("source.mp4");
-                            File target = new File("target.mp3");
-                            AudioAttributes audio = new AudioAttributes();
-                            audio.setCodec("libmp3lame");
-                            audio.setBitRate(new Integer(128000));
-                            audio.setChannels(new Integer(2));
-                            audio.setSamplingRate(new Integer(44100));
-                            EncodingAttributes attrs = new EncodingAttributes();
-                            attrs.setFormat("mp3");
-                            attrs.setAudioAttributes(audio);
-                            Encoder encoder = new Encoder();
-                            encoder.encode(source, target, attrs);
-                            d
-                         */
-                        //AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\Users\\Jos\\Documents\\Antares\\Youtube\\Of Mice & Men - Second and Sebring (Official Music Video).webm"));
-                        //audioPlayer.queue(stream);
-                        /*
-                            } catch (DownloadInterruptedError e) {
-                            throw e;
-                            } catch (RuntimeException e) {
-                            throw e;
-                            } catch (Exception e) {
-                            throw new RuntimeException(e);
-                            }
-                            
-                         */
-                        //Need to work on this
-                        String command = "ffmpeg -i filename.mp4 filename.mp3";
+                    } else if (event.isCommand("queue")) {
 
                         try {
-                            Process pb = new ProcessBuilder("ffmpeg", "-i", "filename.mp4", "filename.mp3").start();
-                        } catch (IOException ex) {
-                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+
+                            String url = event.getArgs()[0];
+                            ArrayList<String> comm=new ArrayList<String>();
+                            ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c",  "cd \"C:\\AntaresMusic\" && youtube-dl --get-filename -o %(title)s.%(ext)s -x --audio-format mp3 --restrict-filenames "+url);
+                            builder2.redirectErrorStream(true);
+                            Process p2 = builder2.start();
+                            BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
+                            String name;
+                            while (true) {
+                                name = r.readLine();
+                                comm.add(name);
+
+                                if (name == null) {
+                                    break;
+                                }
+                                
+                            }
+                            String videoName=comm.get(0).replaceAll(".m4a",".mp3");
+                            videoName=videoName.replaceAll(".webm",".mp3");
+                            
+                            
+                            
+                            ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c",  "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames "+url);
+                            builder.redirectErrorStream(true);
+                            Process p = builder.start();
+                            
+                            
+                            
+                            while (p.isAlive()) {
+                                System.out.println("Downloading...");
+
+                            }
+                            System.out.println("Done!");
+                            
+                            
+                            AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\AntaresMusic\\"+videoName));
+                            audioPlayer.queue(stream);
+                             
+                        } catch (DownloadInterruptedError e) {
+                            throw e;
+                        } catch (RuntimeException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
                         }
 
                     } else if (event.isCommand("pause")) {
@@ -262,7 +239,18 @@ public class CommandListener {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
-                    } else if (event.isCommand("volume")) {
+                    }
+                    else if (event.isCommand("skip")) {
+
+                        try {
+                            event.getMessage().delete();
+                            audioPlayer.skip();
+                        } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    }
+                    else if (event.isCommand("volume")) {
 
                         IChannel channel = event.getMessage().getChannel();
                         try {
