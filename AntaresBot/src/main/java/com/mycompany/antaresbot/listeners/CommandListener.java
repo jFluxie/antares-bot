@@ -7,18 +7,11 @@ package com.mycompany.antaresbot.listeners;
 
 import com.mycompany.antaresbot.main.Bot;
 import com.mycompany.antaresbot.events.CommandExecutionEvent;
-import com.github.axet.vget.VGet;
-import com.github.axet.vget.info.VGetParser;
-import com.github.axet.vget.info.VideoFileInfo;
-import com.github.axet.vget.info.VideoInfo;
-import com.github.axet.vget.vhs.YouTubeInfo.YoutubeQuality;
-import com.github.axet.vget.vhs.YouTubeMPGParser;
-import com.github.axet.vget.vhs.YouTubeQParser;
-import com.github.axet.wget.info.ex.DownloadInterruptedError;
 import static com.mycompany.antaresbot.main.Bot.client;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -177,48 +170,96 @@ public class CommandListener {
                         try {
 
                             String url = event.getArgs()[0];
-                            ArrayList<String> comm=new ArrayList<String>();
-                            ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c",  "cd \"C:\\AntaresMusic\" && youtube-dl --get-filename -o %(title)s.%(ext)s -x --audio-format mp3 --restrict-filenames "+url);
-                            builder2.redirectErrorStream(true);
-                            Process p2 = builder2.start();
-                            BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
-                            String name;
-                            while (true) {
-                                name = r.readLine();
-                                comm.add(name);
 
-                                if (name == null) {
-                                    break;
+                            ArrayList<String> comm = new ArrayList<String>();
+
+                            if (url.contains("http")) {
+
+                                ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --get-filename -o %(title)s.%(ext)s -x --audio-format mp3 --restrict-filenames " + url);
+                                builder2.redirectErrorStream(true);
+                                Process p2 = builder2.start();
+                                BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
+                                String name;
+                                while (true) {
+                                    name = r.readLine();
+                                    comm.add(name);
+
+                                    if (name == null) {
+                                        break;
+                                    }
+
                                 }
-                                
-                            }
-                            String videoName=comm.get(0).replaceAll(".m4a",".mp3");
-                            videoName=videoName.replaceAll(".webm",".mp3");
-                            
-                            
-                            
-                            ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c",  "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames "+url);
-                            builder.redirectErrorStream(true);
-                            Process p = builder.start();
-                            
-                            
-                            
-                            while (p.isAlive()) {
-                                System.out.println("Downloading...");
+                                String videoName = comm.get(0).replaceAll(".m4a", ".mp3");
+                                videoName = videoName.replaceAll(".webm", ".mp3");
+
+                                ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames " + url);
+                                builder.redirectErrorStream(true);
+                                Process p = builder.start();
+
+                                while (p.isAlive()) {
+                                    System.out.println("Downloading...");
+
+                                }
+                                System.out.println("Done!");
+
+                                AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\AntaresMusic\\" + videoName));
+                                audioPlayer.queue(stream);
+
+                            } else {
+
+                                for (int i = 1; i < event.getArgs().length; i++) {
+                                    url += "+" + event.getArgs()[i];
+
+                                }
+
+                                ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --get-filename -o %(title)s.%(ext)s -x --audio-format mp3 --restrict-filenames --default-search ytsearch1: " + url);
+                                builder2.redirectErrorStream(true);
+                                Process p2 = builder2.start();
+                                BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
+                                String name;
+                                while (true) {
+                                    name = r.readLine();
+                                    comm.add(name);
+
+                                    if (name == null) {
+                                        break;
+                                    }
+                                    System.out.println(name);
+
+                                }
+                                String videoName = comm.get(0).replaceAll(".m4a", ".mp3");
+                                videoName = videoName.replaceAll(".webm", ".mp3");
+
+                                System.out.println(videoName);
+
+                                ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                                builder.redirectErrorStream(true);
+                                Process p = builder.start();
+
+                                while (p.isAlive()) {
+                                    System.out.println("Downloading...");
+
+                                }
+                                System.out.println("Done!");
+
+                                AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\AntaresMusic\\" + videoName));
+                                audioPlayer.queue(stream);
 
                             }
-                            System.out.println("Done!");
-                            
-                            
-                            AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\AntaresMusic\\"+videoName));
-                            audioPlayer.queue(stream);
-                             
-                        } catch (DownloadInterruptedError e) {
-                            throw e;
-                        } catch (RuntimeException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
+
+                        } catch (IOException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (UnsupportedAudioFileException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    } //TODO
+                    else if (event.isCommand("queuelocal")) {
+                        if (event.getArgs() == null) {
+                            //Play everything
+
+                        } else {
+                            //
                         }
 
                     } else if (event.isCommand("pause")) {
@@ -239,8 +280,7 @@ public class CommandListener {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
-                    }
-                    else if (event.isCommand("skip")) {
+                    } else if (event.isCommand("skip")) {
 
                         try {
                             event.getMessage().delete();
@@ -249,8 +289,7 @@ public class CommandListener {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
-                    }
-                    else if (event.isCommand("volume")) {
+                    } else if (event.isCommand("volume")) {
 
                         IChannel channel = event.getMessage().getChannel();
                         try {
@@ -295,7 +334,12 @@ public class CommandListener {
 
                         try {
                             event.getMessage().delete();
+                            audioPlayer.clear();
+                            audioPlayer.clean();
+                            
                             client.logout();
+                            System.exit(0);
+                            
                         } catch (RateLimitException | DiscordException | MissingPermissionsException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
