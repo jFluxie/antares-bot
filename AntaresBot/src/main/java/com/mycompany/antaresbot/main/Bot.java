@@ -22,10 +22,14 @@ import sx.blah.discord.util.MessageBuilder;
 public class Bot {
 
     public static IDiscordClient client;
+    
+    public static String musicPath;
 
     public static void main(String[] args) throws DiscordException {
 
         client = getClient("MjE1ODc4MTk1NjUwNjI1NTM3.Cp65dA.o4iFBVaZNu6lJoM1v_pxBS08QG4");
+        //Temporary file
+        musicPath="C:\\AntaresMusic";
         EventListener eventLis = new EventListener(client);
         
         while (!eventLis.getReadyStatus()) {

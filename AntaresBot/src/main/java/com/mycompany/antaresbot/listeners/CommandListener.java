@@ -66,6 +66,7 @@ public class CommandListener {
         commands.add("join");
         commands.add("leave");
         commands.add("queue");
+        commands.add("queuelocal");
         commands.add("skip");
         commands.add("pause");
         commands.add("resume");
@@ -191,17 +192,17 @@ public class CommandListener {
                                 }
                                 String videoName = comm.get(0).replaceAll(".m4a", ".mp3");
                                 videoName = videoName.replaceAll(".webm", ".mp3");
+                                if (!containsFile(videoName)) {
+                                    ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames " + url);
+                                    builder.redirectErrorStream(true);
+                                    Process p = builder.start();
 
-                                ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames " + url);
-                                builder.redirectErrorStream(true);
-                                Process p = builder.start();
+                                    while (p.isAlive()) {
+                                        System.out.println("Downloading...");
 
-                                while (p.isAlive()) {
-                                    System.out.println("Downloading...");
-
+                                    }
+                                    System.out.println("Done!");
                                 }
-                                System.out.println("Done!");
-
                                 AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\AntaresMusic\\" + videoName));
                                 audioPlayer.queue(stream);
 
@@ -231,17 +232,17 @@ public class CommandListener {
                                 videoName = videoName.replaceAll(".webm", ".mp3");
 
                                 System.out.println(videoName);
+                                if (!containsFile(videoName)) {
+                                    ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                                    builder.redirectErrorStream(true);
+                                    Process p = builder.start();
 
-                                ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
-                                builder.redirectErrorStream(true);
-                                Process p = builder.start();
+                                    while (p.isAlive()) {
+                                        System.out.println("Downloading...");
 
-                                while (p.isAlive()) {
-                                    System.out.println("Downloading...");
-
+                                    }
+                                    System.out.println("Done!");
                                 }
-                                System.out.println("Done!");
-
                                 AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\AntaresMusic\\" + videoName));
                                 audioPlayer.queue(stream);
 
@@ -256,7 +257,22 @@ public class CommandListener {
                     } //TODO
                     else if (event.isCommand("queuelocal")) {
                         if (event.getArgs() == null) {
-                            //Play everything
+                            File folder = new File(Bot.musicPath);
+                            File[] listOfFiles = folder.listFiles();
+
+                            for (int i = 0; i < listOfFiles.length; i++) {
+                                if (listOfFiles[i].isFile() && getFileExt(listOfFiles[i].toString()).equals("mp3")) {
+                                    System.out.println("Entramos");
+                                    AudioInputStream stream = null;
+                                    try {
+                                        System.out.println(listOfFiles[i].toString());
+                                        stream = AudioSystem.getAudioInputStream(new File(listOfFiles[i].toString()));
+                                        audioPlayer.queue(stream);
+                                    } catch (UnsupportedAudioFileException | IOException ex) {
+                                        Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }
+                            }
 
                         } else {
                             //
@@ -336,10 +352,10 @@ public class CommandListener {
                             event.getMessage().delete();
                             audioPlayer.clear();
                             audioPlayer.clean();
-                            
+
                             client.logout();
                             System.exit(0);
-                            
+
                         } catch (RateLimitException | DiscordException | MissingPermissionsException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -399,6 +415,36 @@ public class CommandListener {
             }
         }
         return false;
+
+    }
+
+    public boolean containsFile(String fileName) {
+        File folder = new File(Bot.musicPath);
+        File[] listOfFiles = folder.listFiles();
+        System.out.println(Bot.musicPath + "\\" + fileName);
+        for (int i = 0; i < listOfFiles.length; i++) {
+            if (listOfFiles[i].isFile()) {
+                System.out.println(listOfFiles[i].toString());
+                if (listOfFiles[i].toString().equals(Bot.musicPath + "\\" + fileName)) {
+                    return true;
+                }
+
+            }
+        }
+        return false;
+    }
+
+    public String getFileExt(String fileName) {
+        String extension = "";
+
+        int i = fileName.lastIndexOf('.');
+        int p = Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\'));
+
+        if (i > p) {
+            extension = fileName.substring(i + 1);
+        }
+
+        return extension;
 
     }
 
