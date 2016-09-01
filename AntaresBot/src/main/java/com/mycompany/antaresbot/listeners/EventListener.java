@@ -46,7 +46,7 @@ public class EventListener {
        
             
     }
-
+/*
     @EventSubscriber
     public void onChangeGame(StatusChangeEvent event) {
 
@@ -83,7 +83,7 @@ public class EventListener {
         );
 
     }
-    
+    */
     public boolean getReadyStatus()
     {
         return ready;

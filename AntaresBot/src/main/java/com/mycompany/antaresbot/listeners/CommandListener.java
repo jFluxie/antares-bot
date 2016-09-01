@@ -68,6 +68,7 @@ public class CommandListener {
         commands.add("queue");
         commands.add("queuelocal");
         commands.add("skip");
+        commands.add("skipall");
         commands.add("pause");
         commands.add("resume");
         commands.add("volume");
@@ -166,7 +167,21 @@ public class CommandListener {
                         } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    } else if (event.isCommand("queue")) {
+                    }
+                    else if(event.isCommand("skipall"))
+                    {
+                        try {
+                            event.getMessage().delete();
+                        } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        audioPlayer.clear();
+                    }
+                    else if(event.isCommand("queuelist"))
+                    {
+                        //DO SOMETHING
+                    }
+                    else if (event.isCommand("queue")) {
 
                         try {
 
