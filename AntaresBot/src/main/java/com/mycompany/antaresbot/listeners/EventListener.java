@@ -5,48 +5,49 @@
  */
 package com.mycompany.antaresbot.listeners;
 
+import com.mycompany.antaresbot.events.MusicStatusEvent;
 import com.mycompany.antaresbot.main.Bot;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
+import sx.blah.discord.handle.impl.events.AudioPlayEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.StatusChangeEvent;
+import sx.blah.discord.handle.obj.Status;
+import sx.blah.discord.handle.obj.Status.StatusType;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 import sx.blah.discord.util.RequestBuffer;
+import sx.blah.discord.util.audio.events.AudioPlayerEvent;
+import sx.blah.discord.util.audio.events.TrackStartEvent;
 
 /**
  *
  * @author jFluxie
  */
 public class EventListener {
-    
+
     private boolean ready;
+
+    private static Status status;
 
     public EventListener(IDiscordClient client) {
         client.getDispatcher().registerListener(this);
-        ready=false;
+        status = null;
+        ready = false;
     }
 
     @EventSubscriber
     public void onReady(ReadyEvent event) {
 
-       
+        ready = true;
 
-            try {
-                ready=true;
-                new MessageBuilder(Bot.client).withChannel("182651110756974592").withContent("@here Hello everyone my name is Antares, if you need anything from me type !help").build();
-            } catch (RateLimitException | DiscordException | MissingPermissionsException ex) {
-                Logger.getLogger(EventListener.class.getName()).log(Level.SEVERE, null, ex);
-
-            }
-       
-            
     }
-/*
+
+    /*
     @EventSubscriber
     public void onChangeGame(StatusChangeEvent event) {
 
@@ -83,10 +84,21 @@ public class EventListener {
         );
 
     }
-    */
-    public boolean getReadyStatus()
-    {
+     */
+
+    public boolean getReadyStatus() {
         return ready;
     }
 
+    /*
+    @EventSubscriber
+    public void onSongStart(AudioPlayerEvent e) throws DiscordException, RateLimitException
+    {
+        System.out.println("LLEGAMOS A QUI PAPA");
+        MusicStatusEvent musicStart=new MusicStatusEvent(StatusType.STREAM, "ola k asen");
+        Bot.client.changeStatus(musicStart);
+       
+    
+    }
+     */
 }
