@@ -28,7 +28,7 @@ public class Bot {
 
     public static void main(String[] args) throws DiscordException {
 
-        client = getClient("MjE1ODc4MTk1NjUwNjI1NTM3.Cp65dA.o4iFBVaZNu6lJoM1v_pxBS08QG4");
+        client = getClient("MjE1ODc4MTk1NjUwNjI1NTM3.CrJstQ.aqfo7vkS1Itz59L89bGxco9Wazs");
         //Temporary file
         musicPath="C:\\AntaresMusic";
         EventListener eventLis = new EventListener(client);

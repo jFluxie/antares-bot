@@ -80,9 +80,12 @@ public class CommandListener {
         commands.add("help");
         commands.add("logout");
         //TODO Need to find a way to get default Guild ID.
-        audioPlayer = AudioPlayer.getAudioPlayerForGuild(client.getGuildByID("182650809803210752"));
+        audioPlayer = AudioPlayer.getAudioPlayerForGuild(client.getGuildByID("182651110756974592"));
         audioPlayer.setVolume(0.15f);
-        guild = client.getGuildByID("182650809803210752");
+        guild = client.getGuildByID("182651110756974592");
+        
+        (new MusicListener(audioPlayer, Bot.client)).start();
+        
 
     }
 
@@ -469,7 +472,7 @@ public class CommandListener {
         }
 
         return extension;
-
+        
     }
     
     public String getFileName(String fileName)
