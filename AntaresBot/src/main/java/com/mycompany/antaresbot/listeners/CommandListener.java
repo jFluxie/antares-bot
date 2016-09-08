@@ -63,6 +63,8 @@ public class CommandListener {
 
     private IGuild guild;
 
+    private boolean playlistLoop;
+
     public CommandListener(IDiscordClient client) {
         client.getDispatcher().registerListener(this);
         commands = new ArrayList<String>();
@@ -77,15 +79,16 @@ public class CommandListener {
         commands.add("pause");
         commands.add("resume");
         commands.add("volume");
+        commands.add("loop");
         commands.add("help");
         commands.add("logout");
         //TODO Need to find a way to get default Guild ID.
         audioPlayer = AudioPlayer.getAudioPlayerForGuild(client.getGuildByID("182651110756974592"));
         audioPlayer.setVolume(0.15f);
         guild = client.getGuildByID("182651110756974592");
-        
+        playlistLoop = false;
+
         (new MusicListener(audioPlayer, Bot.client)).start();
-        
 
     }
 
@@ -181,13 +184,12 @@ public class CommandListener {
 
                                 event.getMessage().getChannel().sendMessage("There are no songs currently on queue.");
                             } else {
-                                String qSongs="Playlist: \n";
-                                for(int i=0;i<audioPlayer.getPlaylistSize();i++)
-                                {
-                                    qSongs+=(i+1)+". "+getFileName(audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString())+"\n";
-                                
+                                String qSongs = "Playlist: \n";
+                                for (int i = 0; i < audioPlayer.getPlaylistSize(); i++) {
+                                    qSongs += (i + 1) + ". " + getFileName(audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString()) + "\n";
+
                                 }
-                                
+
                                 event.getMessage().getChannel().sendMessage(qSongs);
                             }
 
@@ -333,6 +335,26 @@ public class CommandListener {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
+                    } else if (event.isCommand("loop")) {
+
+                        if (playlistLoop == false) {
+                            audioPlayer.setLoop(true);
+                            playlistLoop = true;
+                            try {
+                                event.getMessage().getChannel().sendMessage("Playlist is on loop.");
+                            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        } else {
+                            audioPlayer.setLoop(false);
+                            playlistLoop = false;
+                            try {
+                                event.getMessage().getChannel().sendMessage("Playlist is not on loop.");
+                            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+
+                        }
                     } else if (event.isCommand("volume")) {
 
                         IChannel channel = event.getMessage().getChannel();
@@ -433,9 +455,7 @@ public class CommandListener {
         });
     }
 
-
     //AUXILIARY METHODS
-    
     public boolean containsBotRole(List<IRole> roles) {
         for (int i = 0; i < roles.size(); i++) {
             IRole r = roles.get(i);
@@ -472,13 +492,12 @@ public class CommandListener {
         }
 
         return extension;
-        
+
     }
-    
-    public String getFileName(String fileName)
-    {
+
+    public String getFileName(String fileName) {
         return fileName.replace("C:\\AntaresMusic\\", "").replace(".mp3", "");
-    
+
     }
 
 }
