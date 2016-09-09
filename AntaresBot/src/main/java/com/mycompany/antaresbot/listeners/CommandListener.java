@@ -203,6 +203,7 @@ public class CommandListener {
                             String url = event.getArgs()[0];
 
                             ArrayList<String> comm = new ArrayList<>();
+                            ArrayList<String> comm2 = new ArrayList<>();
 
                             if (url.contains("http")) {
 
@@ -245,6 +246,20 @@ public class CommandListener {
                                     url += "+" + event.getArgs()[i];
                                 }
 
+                                ProcessBuilder builder3 = new ProcessBuilder("cmd.exe", "/c", "youtube-dl --get-filename -o %(id)s --default-search ytsearch: " + url);
+                                builder3.redirectErrorStream(true);
+                                Process p3 = builder3.start();
+                                BufferedReader r3 = new BufferedReader(new InputStreamReader(p3.getInputStream()));
+                                String lineRead3;
+                                while ((lineRead3 = r3.readLine()) != null) {
+
+                                    comm2.add(lineRead3);
+                                    System.out.println(lineRead3);
+                                }
+                                int rc3 = p3.waitFor();
+
+                                event.getMessage().getChannel().sendMessage("Ha! Got 'em! " + event.getMessage().getAuthor() + ". Queueing: https://www.youtube.com/watch?v=" + comm2.get(0));
+
                                 ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "youtube-dl --get-filename -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                                 builder2.redirectErrorStream(true);
                                 Process p2 = builder2.start();
@@ -283,6 +298,12 @@ public class CommandListener {
                             }
 
                         } catch (IOException | UnsupportedAudioFileException | InterruptedException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (MissingPermissionsException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (RateLimitException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (DiscordException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
