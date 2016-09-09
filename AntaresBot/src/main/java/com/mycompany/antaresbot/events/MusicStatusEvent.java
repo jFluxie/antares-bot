@@ -18,4 +18,10 @@ public class MusicStatusEvent extends Status {
         super(type, message);
     }
     
+    public MusicStatusEvent(StatusType type)
+    {
+        super(type, "");
+    
+    }
+    
 }

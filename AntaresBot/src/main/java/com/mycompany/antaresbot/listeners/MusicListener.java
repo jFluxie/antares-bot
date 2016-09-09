@@ -36,7 +36,7 @@ public class MusicListener extends Thread {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(MIN_PRIORITY);
+                Thread.sleep(1000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(MusicListener.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -44,9 +44,13 @@ public class MusicListener extends Thread {
                 
                 if (!previousSong.equalsIgnoreCase(audioPlayer.getCurrentTrack().getMetadata().get("file").toString())) {
                     previousSong = audioPlayer.getCurrentTrack().getMetadata().get("file").toString();
-                    String song=previousSong.replace("C:\\AntaresMusic\\", "").replace(".mp3", "");
+                    String song = previousSong.replace("C:\\AntaresMusic\\", "").replace(".mp3", "");
                     client.changeStatus(new MusicStatusEvent(StatusType.STREAM, song));
                 }
+                
+            } else {
+                
+                client.changeStatus(new MusicStatusEvent(StatusType.NONE));
                 
             }
             
