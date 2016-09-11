@@ -57,7 +57,7 @@ public class CommandListener {
     // This is the executor that we'll look for
     private final static String KEY = "!";
 
-    private String ROLE = "BOT MASTER";
+    private String ROLE;
 
     private AudioPlayer audioPlayer;
 
@@ -83,10 +83,11 @@ public class CommandListener {
         commands.add("help");
         commands.add("logout");
         //TODO Need to find a way to get default Guild ID.
-        audioPlayer = AudioPlayer.getAudioPlayerForGuild(client.getGuildByID("182651110756974592"));
+        audioPlayer = AudioPlayer.getAudioPlayerForGuild(client.getGuildByID(Bot.guildId));
         audioPlayer.setVolume(0.15f);
-        guild = client.getGuildByID("182651110756974592");
+        guild = client.getGuildByID(Bot.guildId);
         playlistLoop = false;
+        ROLE=Bot.botRole;
 
         (new MusicListener(audioPlayer, Bot.client)).start();
 
