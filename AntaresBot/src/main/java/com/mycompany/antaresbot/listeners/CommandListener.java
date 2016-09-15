@@ -87,8 +87,7 @@ public class CommandListener {
         audioPlayer.setVolume(0.15f);
         guild = client.getGuildByID(Bot.guildId);
         playlistLoop = false;
-        ROLE=Bot.botRole;
-
+        ROLE = Bot.botRole;
         (new MusicListener(audioPlayer, Bot.client)).start();
 
     }
@@ -187,7 +186,7 @@ public class CommandListener {
                             } else {
                                 String qSongs = "Playlist: \n";
                                 for (int i = 0; i < audioPlayer.getPlaylistSize(); i++) {
-                                    qSongs += (i + 1) + ". " + getFileName(audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString()) + "\n";
+                                    qSongs += (i + 1) + ". " + getFileName(audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString()).replaceAll("_", " ") + "\n";
 
                                 }
 
@@ -202,9 +201,7 @@ public class CommandListener {
                         try {
 
                             String url = event.getArgs()[0];
-
-                            ArrayList<String> comm = new ArrayList<>();
-                            ArrayList<String> comm2 = new ArrayList<>();
+                            String songName = "";
 
                             if (url.contains("http")) {
 
@@ -212,34 +209,20 @@ public class CommandListener {
                                 builder2.redirectErrorStream(true);
                                 Process p2 = builder2.start();
                                 BufferedReader br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
-                                String lineRead2;
-                                while ((lineRead2 = br2.readLine()) != null) {
+                                songName = br2.readLine();
+                                p2.waitFor();
 
-                                    comm.add(lineRead2);
-                                    System.out.println(lineRead2);
-                                }
-                                int rc2 = p2.waitFor();
-
-                                String videoName = comm.get(0).replaceAll(".m4a", ".mp3");
-                                videoName = videoName.replaceAll(".webm", ".mp3");
-                                videoName = videoName.replaceAll(".mp4", ".mp3");
-                                if (!containsFile(videoName)) {
-                                    System.out.println("EL ARCHIVO NO SE ENCUENTRA EN EL FOLDER");
+                                songName = songName.replaceAll(".m4a", ".mp3");
+                                songName = songName.replaceAll(".webm", ".mp3");
+                                songName = songName.replaceAll(".mp4", ".mp3");
+                                if (!containsFile(songName)) {
+                                    System.out.println("FILE IS NOT ON FOLDER. START DOWNLOADING.");
                                     ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames " + url);
                                     builder.redirectErrorStream(true);
                                     Process p = builder.start();
-
-                                    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                                    String lineRead;
-                                    while ((lineRead = br.readLine()) != null) {
-
-                                        System.out.println(lineRead);
-                                    }
-
-                                    int rc = p.waitFor();
+                                    p.waitFor();
                                 }
-                                //AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\AntaresMusic\\" + videoName));
-                                audioPlayer.queue(new File("C:\\AntaresMusic\\" + videoName));
+                                audioPlayer.queue(new File("C:\\AntaresMusic\\" + songName));
 
                             } else {
 
@@ -247,77 +230,46 @@ public class CommandListener {
                                     url += "+" + event.getArgs()[i];
                                 }
 
-                                ProcessBuilder builder3 = new ProcessBuilder("cmd.exe", "/c", "youtube-dl --get-filename -o %(id)s --default-search ytsearch: " + url);
-                                builder3.redirectErrorStream(true);
-                                Process p3 = builder3.start();
-                                BufferedReader r3 = new BufferedReader(new InputStreamReader(p3.getInputStream()));
-                                String lineRead3;
-                                while ((lineRead3 = r3.readLine()) != null) {
+                                System.out.println("SONG NAME: " + url);
 
-                                    comm2.add(lineRead3);
-                                    System.out.println(lineRead3);
-                                }
-                                int rc3 = p3.waitFor();
-
-                                event.getMessage().getChannel().sendMessage("Ha! Got 'em! " + event.getMessage().getAuthor() + ". Queueing: https://www.youtube.com/watch?v=" + comm2.get(0));
-
-                                ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "youtube-dl --get-filename -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                                ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "youtube-dl --get-filename -o %(id)s-%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                                 builder2.redirectErrorStream(true);
                                 Process p2 = builder2.start();
                                 BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
-                                String lineRead2;
-                                while ((lineRead2 = r.readLine()) != null) {
+                                songName = r.readLine();
+                                System.out.println("SONG NAME2: " + songName);
+                                p2.waitFor();
 
-                                    comm.add(lineRead2);
-                                    System.out.println(lineRead2);
-                                }
-                                int rc2 = p2.waitFor();
+                                event.getMessage().getChannel().sendMessage(event.getMessage().getAuthor() + ". Queued: https://www.youtube.com/watch?v=" + extractVideoId(songName));
 
-                                String videoName = comm.get(0).replaceAll(".m4a", ".mp3");
-                                videoName = videoName.replaceAll(".webm", ".mp3");
-                                videoName = videoName.replaceAll(".mp4", ".mp3");
-                                System.out.println("VIDEO NAME: " + videoName);
+                                songName = songName.replaceAll(".m4a", ".mp3");
+                                songName = songName.replaceAll(".webm", ".mp3");
+                                songName = songName.replaceAll(".mp4", ".mp3");
+                                songName = songName.replaceAll(extractVideoId(songName) + "-", "");
 
-                                if (!containsFile(videoName)) {
-                                    System.out.println("EL ARCHIVO NO SE ENCONTRO, SE VA A DESCARGAR.");
+                                if (!containsFile(songName)) {
+                                    System.out.println("FILE NOT FOUND. WILL BEGIN DOWNLOADING.");
                                     ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                                     builder.redirectErrorStream(true);
                                     Process p = builder.start();
-
-                                    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                                    String lineRead;
-                                    while ((lineRead = br.readLine()) != null) {
-
-                                        System.out.println(lineRead);
-                                    }
-
-                                    int rc = p.waitFor();
+                                    p.waitFor();
                                 }
-                                //AudioInputStream stream = AudioSystem.getAudioInputStream(new File("C:\\AntaresMusic\\" + videoName));
-                                audioPlayer.queue(new File("C:\\AntaresMusic\\" + videoName));
+                                audioPlayer.queue(new File("C:\\AntaresMusic\\" + songName));
 
                             }
 
-                        } catch (IOException | UnsupportedAudioFileException | InterruptedException ex) {
-                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (MissingPermissionsException ex) {
-                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (RateLimitException ex) {
-                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (DiscordException ex) {
+                        } catch (IOException | UnsupportedAudioFileException | InterruptedException | MissingPermissionsException | RateLimitException | DiscordException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
-                    } //TODO
-                    else if (event.isCommand("queuelocal")) {
+                    } else if (event.isCommand("queuelocal")) {
                         if (event.getArgs() == null) {
                             File folder = new File(Bot.musicPath);
                             File[] listOfFiles = folder.listFiles();
 
                             for (int i = 0; i < listOfFiles.length; i++) {
                                 if (listOfFiles[i].isFile() && getFileExt(listOfFiles[i].toString()).equals("mp3")) {
-                                    System.out.println("Entramos");
-                                    AudioInputStream stream = null;
+
                                     try {
                                         audioPlayer.queue(new File(listOfFiles[i].toString()));
                                     } catch (UnsupportedAudioFileException | IOException ex) {
@@ -520,6 +472,22 @@ public class CommandListener {
     public String getFileName(String fileName) {
         return fileName.replace("C:\\AntaresMusic\\", "").replace(".mp3", "");
 
+    }
+
+    public String extractVideoId(String line) {
+        char[] c = line.toCharArray();
+
+        String id = "";
+
+        for (int i = 0; i < c.length; i++) {
+            if (c[i] != '-') {
+                id += c[i];
+            } else {
+                break;
+            }
+
+        }
+        return id;
     }
 
 }
