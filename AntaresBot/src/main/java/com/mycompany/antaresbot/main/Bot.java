@@ -33,8 +33,10 @@ public class Bot {
     public static String token;
 
     public static String guildId;
-    
+
     public static String botRole;
+    
+    public static String owner;
 
     public static void main(String[] args) throws DiscordException {
 
@@ -68,7 +70,6 @@ public class Bot {
                 if (line.startsWith("token")) {
                     String value[] = line.split(":");
                     token = value[1];
-
                 }
                 if (line.startsWith("guild_id")) {
                     String value[] = line.split(":");
@@ -77,6 +78,10 @@ public class Bot {
                 if (line.startsWith("bot_role")) {
                     String value[] = line.split(":");
                     botRole = value[1];
+                }
+                if (line.startsWith("bot_owner")) {
+                    String value[] = line.split(":");
+                    owner = value[1];
                 }
 
             }
@@ -89,12 +94,9 @@ public class Bot {
         File f = new File("C:\\AntaresMusic");
         if (f.exists() && f.isDirectory()) {
             // no problems here
-        }
-        else
-        {
+        } else {
             f.mkdir();
         }
-      
 
     }
 
