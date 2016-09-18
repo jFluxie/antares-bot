@@ -202,9 +202,25 @@ public class CommandListener {
                 event.getMessage().delete();
                 IPrivateChannel channel = client.getOrCreatePMChannel(client.getUserByID(temp.getAuthor().getID()));
                 String cm = "";
-                for (int i = 0; i < commands.size(); i++) {
-                    cm += "!" + commands.get(i) + "\n";
+
+                if (event.getBy().getID().equals(owner)) {
+                    for (int i = 0; i < botOwnerCommands.size(); i++) {
+                        cm += "!" + botOwnerCommands.get(i) + "\n";
+                    }
+
+                } else if (containsBotRole(event.getBy().getRolesForGuild(guild))) {
+
+                    for (int i = 0; i < botRoleCommands.size(); i++) {
+                        cm += "!" + botRoleCommands.get(i) + "\n";
+                    }
+
+                } else {
+
+                    for (int i = 0; i < commands.size(); i++) {
+                        cm += "!" + commands.get(i) + "\n";
+                    }
                 }
+
                 channel.sendMessage("Hello " + temp.getAuthor() + ". Here's a list of commands you might find useful:\n" + cm);
 
             } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
