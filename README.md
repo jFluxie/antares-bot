@@ -37,5 +37,5 @@ Now that we have our software set-up we can proceed to join our bot to the serve
 6. The bot should already be on your server, give the bot all possible permissions **BEFORE EXECUTING THE BOT**.
 
 ##Running the bot
-1. Run antaresbot.jar on target folder.
+1. Run antaresbot.jar.
 2. To stop the bot, use !logout command.
