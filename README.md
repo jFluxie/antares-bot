@@ -26,7 +26,7 @@ Now that we have our software set-up we can proceed to join our bot to the serve
 1. Go to [Discord Applications](https://discordapp.com/developers/applications/me).
 2. Create New Application, name your bot whatever you like.
 3. Create bot user.
-4. Visit this page: https://discordapp.com/oauth2/authorize?&client_id=CLIENT_ID&scope=bot REPLACE “**CLIENT_ID**” with your client ID provided on the app page (This should be a long number).
+4. Visit this page: https://discordapp.com/oauth2/authorize?&client_id=CLIENT_ID&scope=bot REPLACE “**CLIENT_ID**” in the url with your bot's client ID provided on the app page (This should be a long number).
 5. Select the server you want the bot to join.
 6. That's it!
 
