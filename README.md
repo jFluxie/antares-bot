@@ -8,13 +8,16 @@ You must also have the latest Java version installed.
 ###To install ffmpeg:
 1. Go to [FFMPEG](https://ffmpeg.zeranoe.com/builds) and download the static version (either the 32 bit or the 64 bit depending on your pc).
 2. Extract it wherever you want. 
-3. Add the bin directory of the ffmpeg file to your 'path' local variable. To do this, go to system in control panel and click advanced system settings. Click on environmental variables and under system variables, look for a variable named path. Click edit, go to the end and now add the bin directory here. Note: Add a ";" before pasting the directory here to avoid errors.   
-4. That's it!
+3. Go to bin folder and copy file path.
+4. Search on windows home: 'view advanced system settings' and click on the first result. Click on environmental variables and under system variables, look for a variable named path. 
+If you are using Windows 7:
+On variable value, add a ';' on the end and then paste the path you copied earlier. 
+5. That's it!
 
 ###To install youtube-dl:
 1. Go to [YOUTUBE-DL](https://rg3.github.io/youtube-dl/download.html) and download the windows executable file.
-2. Place it wherever you want.
-3. Add the file path to your local 'path' local variable. Follow the same instructions listed in step 3 of the ffmpeg installation. 
+2. Place it wherever you want. 
+3. Add the file path where the executable is located to your System's 'path' variable. Follow the same instructions listed in step 4 of the ffmpeg installation. 
 4. That's it!
 
 Now that we have our software set-up we can proceed to join our bot to the server.
@@ -39,3 +42,4 @@ Now that we have our software set-up we can proceed to join our bot to the serve
 ##Running the bot
 1. Run antaresbot.jar.
 2. To stop the bot, use !logout command.
+
