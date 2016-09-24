@@ -4,6 +4,7 @@ NOTE: Current build only works on Windows OS.
 ##First time setup
 First of all, we're going to use some external software to use our music functionality (ffmpeg and youtube-dl). 
 You must also have the latest Java version installed.
+Before you follow these steps, make sure you have the permissions to add discord users to your server (admin role).
 
 ###To install ffmpeg:
 1. Go to [FFMPEG](https://ffmpeg.zeranoe.com/builds) and download the static version (either the 32 bit or the 64 bit depending on your pc).
@@ -42,4 +43,3 @@ Now that we have our software set-up we can proceed to join our bot to the serve
 ##Running the bot
 1. Run antaresbot.jar.
 2. To stop the bot, use !logout command.
-
