@@ -314,7 +314,7 @@ public class CommandListener {
 
                     System.out.println("SONG NAME: " + url);
 
-                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename -o %(id)s-%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-quality 0 -o %(id)s-%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                     builder2.redirectErrorStream(true);
                     Process p2 = builder2.start();
                     BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
@@ -332,7 +332,7 @@ public class CommandListener {
 
                     if (!containsFile(songName)) {
                         System.out.println("FILE NOT FOUND. WILL BEGIN DOWNLOADING.");
-                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-quality 0 -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                         builder.redirectErrorStream(true);
                         Process p = builder.start();
                         p.waitFor();
