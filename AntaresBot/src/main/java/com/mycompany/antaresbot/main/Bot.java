@@ -9,6 +9,7 @@ import com.mycompany.antaresbot.listeners.CommandListener;
 import com.mycompany.antaresbot.listeners.CommandListener;
 import com.mycompany.antaresbot.listeners.EventListener;
 import com.mycompany.antaresbot.listeners.EventListener;
+import com.mycompany.antaresbot.listeners.MusicListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -46,6 +47,8 @@ public class Bot {
     public static String executionPath;
     
     public static ArrayList permissions;
+    
+    public static AudioPlayer audioPlayer;
 
     public static void main(String[] args) throws DiscordException, RateLimitException, MissingPermissionsException {
 
@@ -57,6 +60,10 @@ public class Bot {
         while (!eventLis.getReadyStatus()) {
             System.out.println("Loading...");
         }
+        
+        audioPlayer = AudioPlayer.getAudioPlayerForGuild(client.getGuildByID(guildId));
+        audioPlayer.setVolume(0.15f);
+        (new MusicListener(Bot.audioPlayer, Bot.client)).start();
         new CommandListener(client);
         System.out.println("DONE!");
         
@@ -68,6 +75,7 @@ public class Bot {
         }
         //Where we are currently running the bot
         executionPath=System.getProperty("user.dir");
+        System.out.println("LETS GO");
 
     }
 

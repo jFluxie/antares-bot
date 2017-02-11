@@ -39,7 +39,7 @@ public class MusicListener extends Thread {
 
                 if (!previousSong.equalsIgnoreCase(audioPlayer.getCurrentTrack().getMetadata().get("file").toString())) {
                     previousSong = audioPlayer.getCurrentTrack().getMetadata().get("file").toString();
-                    String song = previousSong.replace("music\\", "").replace(".mp3", "");
+                    String song = previousSong.replace("music\\", "").replace(".wav", "");
                     client.changeStatus(new MusicStatusEvent(StatusType.STREAM, song.replaceAll("_", " ")));
                 }
 

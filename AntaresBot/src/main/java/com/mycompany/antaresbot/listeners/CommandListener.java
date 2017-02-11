@@ -7,7 +7,6 @@ package com.mycompany.antaresbot.listeners;
 
 import com.mycompany.antaresbot.main.Bot;
 import com.mycompany.antaresbot.events.CommandExecutionEvent;
-import static com.mycompany.antaresbot.main.Bot.botRole;
 import static com.mycompany.antaresbot.main.Bot.client;
 import static com.mycompany.antaresbot.main.Bot.owner;
 import java.io.BufferedReader;
@@ -15,9 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -28,7 +26,6 @@ import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IPrivateChannel;
-import sx.blah.discord.handle.obj.IRole;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -52,8 +49,6 @@ public class CommandListener {
     private ArrayList<String> botOwnerCommands;
 
     private final static String KEY = "!";
-
-    private AudioPlayer audioPlayer;
 
     private IGuild guild;
 
@@ -98,12 +93,9 @@ public class CommandListener {
         botOwnerCommands.add("loop");
         botOwnerCommands.add("logout");
 
-        audioPlayer = AudioPlayer.getAudioPlayerForGuild(client.getGuildByID(Bot.guildId));
-        audioPlayer.setVolume(0.15f);
+
         guild = client.getGuildByID(Bot.guildId);
         playlistLoop = false;
-        (new MusicListener(audioPlayer, Bot.client)).start();
-
         client.getDispatcher().registerListener(this);
     }
 
@@ -249,16 +241,16 @@ public class CommandListener {
             }
         } else if (event.isCommand("skipall")) {
 
-            audioPlayer.clear();
+            Bot.audioPlayer.clear();
         } else if (event.isCommand("playlist")) {
             try {
-                if (audioPlayer.getCurrentTrack() == null) {
+                if (Bot.audioPlayer.getCurrentTrack() == null) {
 
                     event.getMessage().getChannel().sendMessage("There are no songs currently on queue.");
                 } else {
                     String qSongs = "Playlist: \n";
-                    for (int i = 0; i < audioPlayer.getPlaylistSize(); i++) {
-                        qSongs += (i + 1) + ". " + getFileName(audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString()).replaceAll("_", " ").replaceAll("music", "").replace("\\", "") + "\n";
+                    for (int i = 0; i < Bot.audioPlayer.getPlaylistSize(); i++) {
+                        qSongs += (i + 1) + ". " + getFileName(Bot.audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString()).replaceAll("_", " ").replaceAll("music", "").replace("\\", "").replace(".wav", "") + "\n";
                     }
                     event.getMessage().getChannel().sendMessage(qSongs);
                 }
@@ -273,38 +265,46 @@ public class CommandListener {
 
                 if (url.contains("http") || url.contains("https")) {
 
-                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-quality 0 -o %(title)s.%(ext)s --restrict-filenames " + url);
+                    //GET SONG NAME
+                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-format wav -o %(title)s.%(ext)s --restrict-filenames " + url);
                     builder2.redirectErrorStream(true);
                     Process p2 = builder2.start();
                     BufferedReader br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
                     songName = br2.readLine();
                     p2.waitFor();
                     String save = songName;
-                    songName = songName.replaceAll(".m4a", ".mp3");
-                    songName = songName.replaceAll(".webm", ".mp3");
-                    songName = songName.replaceAll(".mp4", ".mp3");
+                    songName = songName.replaceAll(".m4a", ".wav");
+                    songName = songName.replaceAll(".webm", ".wav");
+                    songName = songName.replaceAll(".mp4", ".wav");
 
                     System.out.println("SONGNAME IS " + songName);
                     System.out.println("SAVE IS " + save);
+                    
+                    //CHECK IF WE HAVE THE SONG
                     if (!containsFile(songName)) {
+                        //FIRST DOWNLOAD THE SONG
                         System.out.println("FILE IS NOT ON FOLDER. START DOWNLOADING.");
-                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-quality 0 -o %(title)s.%(ext)s --restrict-filenames " + url);
+                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-format wav -o %(title)s.%(ext)s --restrict-filenames " + url);
                         builder.redirectErrorStream(true);
                         Process p = builder.start();
                         p.waitFor();
-
+                        /*
+                        //THEN CONVERT SONG TO MP3
                         System.out.println("THE COMMAND IS: cd " + Bot.executionPath + "\\music && ffmpeg -i " + save + " " + songName);
                         ProcessBuilder builder7 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && ffmpeg -i " + save + " " + songName);
                         builder7.redirectErrorStream(true);
                         Process p7 = builder7.start();
                         p7.waitFor();
+                        
+                        //DELETE FILE THAT ISNT MP3 FROM THE FOLDER
                         File file = new File("music\\" + save);
-
                         file.delete();
+                        */
+                        
                     } else {
                         System.out.println("WE ALREADY HAVE THE FILE");
                     }
-                    audioPlayer.queue(new File("music\\" + songName));
+                    Bot.audioPlayer.queue(new File("music\\" + songName));
 
                 } else {
 
@@ -314,7 +314,7 @@ public class CommandListener {
 
                     System.out.println("SONG NAME: " + url);
 
-                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-quality 0 -o %(id)s-%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-format wav -o %(id)s:%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                     builder2.redirectErrorStream(true);
                     Process p2 = builder2.start();
                     BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
@@ -324,24 +324,26 @@ public class CommandListener {
 
                     event.getMessage().getChannel().sendMessage(event.getMessage().getAuthor() + ". Queued: https://www.youtube.com/watch?v=" + extractVideoId(songName));
 
-                    songName = songName.replaceAll(extractVideoId(songName) + "-", "");
+                    songName = songName.replaceAll(extractVideoId(songName) + "#", "");
                     String save2 = songName;
-                    //songName = songName.replaceAll(".m4a", ".mp3");
-                    //songName = songName.replaceAll(".webm", ".mp3");
-                    //songName = songName.replaceAll(".mp4", ".mp3");
+                    songName = songName.replaceAll(".m4a", ".wav");
+                    songName = songName.replaceAll(".webm", ".wav");
+                    songName = songName.replaceAll(".mp4", ".wav");
 
                     if (!containsFile(songName)) {
                         System.out.println("FILE NOT FOUND. WILL BEGIN DOWNLOADING.");
-                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-quality 0 -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-format wav -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                         builder.redirectErrorStream(true);
                         Process p = builder.start();
                         p.waitFor();
-
+                        
+                        /*
                         System.out.println("THE COMMAND IS: cd " + Bot.executionPath + "\\music && ffmpeg -i " + save2 + " " + songName);
                         ProcessBuilder builder7 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && ffmpeg -i " + save2 + " " + songName);
                         builder7.redirectErrorStream(true);
                         Process p7 = builder7.start();
 
+                        
                         //Read out dir output
                         InputStream is = p7.getInputStream();
                         InputStreamReader isr = new InputStreamReader(is);
@@ -351,14 +353,17 @@ public class CommandListener {
                             System.out.println(line);
                         }
                         p7.waitFor();
+                        
                         File file = new File("music\\" + save2);
 
                         file.delete();
+                        */
 
                     } else {
                         System.out.println("WE ALREADY HAVE THE FILE");
                     }
-                    audioPlayer.queue(new File("music\\" + songName));
+                    System.out.println("NOW PLAYING...");
+                    Bot.audioPlayer.queue(new File("music\\" + songName));
 
                 }
 
@@ -375,7 +380,7 @@ public class CommandListener {
                     if (listOfFiles[i].isFile() && getFileExt(listOfFiles[i].toString()).equals("mp3")) {
 
                         try {
-                            audioPlayer.queue(new File(listOfFiles[i].toString()));
+                            Bot.audioPlayer.queue(new File(listOfFiles[i].toString()));
                         } catch (UnsupportedAudioFileException | IOException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -388,20 +393,20 @@ public class CommandListener {
 
         } else if (event.isCommand("pause")) {
 
-            audioPlayer.setPaused(true);
+            Bot.audioPlayer.setPaused(true);
 
         } else if (event.isCommand("resume")) {
 
-            audioPlayer.setPaused(false);
+            Bot.audioPlayer.setPaused(false);
 
         } else if (event.isCommand("skip")) {
 
-            audioPlayer.skip();
+            Bot.audioPlayer.skip();
 
         } else if (event.isCommand("loop")) {
 
             if (playlistLoop == false) {
-                audioPlayer.setLoop(true);
+                Bot.audioPlayer.setLoop(true);
                 playlistLoop = true;
                 try {
                     event.getMessage().getChannel().sendMessage("Playlist is on loop.");
@@ -409,7 +414,7 @@ public class CommandListener {
                     Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } else {
-                audioPlayer.setLoop(false);
+                Bot.audioPlayer.setLoop(false);
                 playlistLoop = false;
                 try {
                     event.getMessage().getChannel().sendMessage("Playlist is not on loop.");
@@ -434,7 +439,7 @@ public class CommandListener {
                         } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                             Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                        audioPlayer.setVolume(finalVolume);
+                        Bot.audioPlayer.setVolume(finalVolume);
                     } else {
                         try {
                             channel.sendMessage("Volume values must be between 0 and 100!");
@@ -444,7 +449,7 @@ public class CommandListener {
                     }
                 } else {
                     try {
-                        channel.sendMessage("You must specify a volume value!" + audioPlayer.getVolume());
+                        channel.sendMessage("You must specify a volume value!" + Bot.audioPlayer.getVolume());
                     } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                         Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -452,7 +457,7 @@ public class CommandListener {
                 }
             } else {
                 try {
-                    channel.sendMessage("The volume is currently set to " + Math.round(audioPlayer.getVolume() * 100) + "%");
+                    channel.sendMessage("The volume is currently set to " + Math.round(Bot.audioPlayer.getVolume() * 100) + "%");
                 } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                     Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -460,8 +465,8 @@ public class CommandListener {
 
         } else if (event.isCommand("logout")) {
 
-            audioPlayer.clear();
-            audioPlayer.clean();
+            Bot.audioPlayer.clear();
+            Bot.audioPlayer.clean();
 
             try {
                 client.logout();
@@ -513,7 +518,7 @@ public class CommandListener {
         String id = "";
 
         for (int i = 0; i < c.length; i++) {
-            if (c[i] != '-') {
+            if (c[i] != '#') {
                 id += c[i];
             } else {
                 break;
