@@ -1,4 +1,4 @@
 token:
-guild_id:
-bot_role:
-bot_owner:
+owner:
+guild:
+permissions:

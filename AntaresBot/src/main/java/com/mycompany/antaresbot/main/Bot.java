@@ -13,11 +13,18 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IGuild;
+import sx.blah.discord.handle.obj.IVoiceChannel;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MessageBuilder;
+import sx.blah.discord.util.MissingPermissionsException;
+import sx.blah.discord.util.RateLimitException;
 import sx.blah.discord.util.audio.AudioPlayer;
 
 /**
@@ -28,29 +35,39 @@ public class Bot {
 
     public static IDiscordClient client;
 
-    public static String musicPath;
-
     public static String token;
-
-    public static String guildId;
 
     public static String botRole;
     
     public static String owner;
+    
+    public static String guildId;
+    
+    public static String executionPath;
+    
+    public static ArrayList permissions;
 
-    public static void main(String[] args) throws DiscordException {
+    public static void main(String[] args) throws DiscordException, RateLimitException, MissingPermissionsException {
 
         init();
         client = getClient(token);
 
-        musicPath = "C:\\AntaresMusic";
         EventListener eventLis = new EventListener(client);
 
         while (!eventLis.getReadyStatus()) {
             System.out.println("Loading...");
         }
-        System.out.println("DONE!");
         new CommandListener(client);
+        System.out.println("DONE!");
+        
+        //Check if the owner is in a voice channel, if he is, then join his voice channel
+        List<IVoiceChannel> vp=client.getUserByID(owner).getConnectedVoiceChannels();
+        System.out.println("LIST: "+vp);
+        if(!vp.isEmpty() ){
+            vp.get(0).join();
+        }
+        //Where we are currently running the bot
+        executionPath=System.getProperty("user.dir");
 
     }
 
@@ -59,6 +76,8 @@ public class Bot {
     }
 
     public static void init() {
+        
+        permissions=new ArrayList();
 
         //Check properties file
         try (BufferedReader br = new BufferedReader(new FileReader("init.txt"))) {
@@ -71,31 +90,41 @@ public class Bot {
                     String value[] = line.split(":");
                     token = value[1];
                 }
-                if (line.startsWith("guild_id")) {
-                    String value[] = line.split(":");
-                    guildId = value[1];
-                }
-                if (line.startsWith("bot_role")) {
-                    String value[] = line.split(":");
-                    botRole = value[1];
-                }
-                if (line.startsWith("bot_owner")) {
+                if (line.startsWith("owner")) {
                     String value[] = line.split(":");
                     owner = value[1];
                 }
+                if (line.startsWith("guild")) {
+                    String value[] = line.split(":");
+                    guildId = value[1];
+                }
+                if (line.startsWith("permissions")) {
+                    String value[] = line.split(":");
+                    if(value.length>1)
+                    {
+                        //If we only have 1 permission
+                        if(value.length==2)
+                        {
+                            permissions.add(value[1]);
+                        }
+                        //multiple permissions
+                        else
+                        {
+                            String val[]=value[1].split(",");
+                            for(int i=0;i<val.length;i++)
+                            {
+                                permissions.add(val[i]);
+                            }
+                            
+                        }
+                    }
+                }
+                
 
             }
 
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        //Check if AntaresMusic Folder exists, if not create it
-        File f = new File("C:\\AntaresMusic");
-        if (f.exists() && f.isDirectory()) {
-            // no problems here
-        } else {
-            f.mkdir();
         }
 
     }

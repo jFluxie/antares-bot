@@ -11,27 +11,13 @@ import static com.mycompany.antaresbot.main.Bot.botRole;
 import static com.mycompany.antaresbot.main.Bot.client;
 import static com.mycompany.antaresbot.main.Bot.owner;
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
@@ -77,6 +63,7 @@ public class CommandListener {
         botRoleCommands = new ArrayList<String>();
         botOwnerCommands = new ArrayList<String>();
 
+        //TBH this is awful.
         commands.add("ping");
         commands.add("playlist");
         commands.add("help");
@@ -85,6 +72,7 @@ public class CommandListener {
         botRoleCommands.add("playlist");
         botRoleCommands.add("help");
         botRoleCommands.add("queue");
+        botRoleCommands.add("q");
         botRoleCommands.add("skip");
         botRoleCommands.add("skipall");
         botRoleCommands.add("pause");
@@ -98,6 +86,7 @@ public class CommandListener {
         botOwnerCommands.add("join");
         botOwnerCommands.add("leave");
         botOwnerCommands.add("queue");
+        botOwnerCommands.add("q");
         botOwnerCommands.add("queuelocal");
         botOwnerCommands.add("skip");
         botOwnerCommands.add("skipall");
@@ -152,14 +141,13 @@ public class CommandListener {
 
                 if (String.valueOf(event.getBy().getID()).equals(owner)) {
                     executeCommand(event);
-                } else if (containsBotRole(event.getBy().getRolesForGuild(guild))) {
+                } else if (!Bot.permissions.isEmpty() && containsBotRole(event.getBy().getID())) {
                     if (botRoleCommands.contains(event.getCommand())) {
                         executeCommand(event);
                     } else {
 
                         try {
                             IMessage temp = event.getMessage();
-                            event.getMessage().delete();
                             IPrivateChannel channel = client.getOrCreatePMChannel(client.getUserByID(temp.getAuthor().getID()));
                             channel.sendMessage("Im sorry. You don't have permissions to use: '!" + event.getCommand() + "' command.");
                         } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
@@ -172,7 +160,6 @@ public class CommandListener {
                 } else {
                     try {
                         IMessage temp = event.getMessage();
-                        event.getMessage().delete();
                         IPrivateChannel channel = client.getOrCreatePMChannel(client.getUserByID(temp.getAuthor().getID()));
                         channel.sendMessage("Im sorry. You don't have permissions to use: '!" + event.getCommand() + "' command.");
                     } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
@@ -184,7 +171,6 @@ public class CommandListener {
 
                 try {
                     IMessage temp = event.getMessage();
-                    event.getMessage().delete();
                     IPrivateChannel channel = client.getOrCreatePMChannel(client.getUserByID(temp.getAuthor().getID()));
                     channel.sendMessage("Im sorry. The command '!" + event.getCommand() + "' does not exist.");
                 } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
@@ -199,7 +185,6 @@ public class CommandListener {
         if (event.isCommand("help")) {
             try {
                 IMessage temp = event.getMessage();
-                event.getMessage().delete();
                 IPrivateChannel channel = client.getOrCreatePMChannel(client.getUserByID(temp.getAuthor().getID()));
                 String cm = "";
 
@@ -208,7 +193,7 @@ public class CommandListener {
                         cm += "!" + botOwnerCommands.get(i) + "\n";
                     }
 
-                } else if (containsBotRole(event.getBy().getRolesForGuild(guild))) {
+                } else if (containsBotRole(event.getBy().getID())) {
 
                     for (int i = 0; i < botRoleCommands.size(); i++) {
                         cm += "!" + botRoleCommands.get(i) + "\n";
@@ -237,7 +222,6 @@ public class CommandListener {
             try {
 
                 IMessage message = event.getMessage();
-                event.getMessage().delete();
 
                 if (message.getAuthor().getConnectedVoiceChannels().isEmpty()) {
                     event.getMessage().getChannel().sendMessage(event.getBy() + ". Im sorry you are currently not in a channel. Try again");
@@ -250,11 +234,6 @@ public class CommandListener {
             }
         } else if (event.isCommand("leave")) {
             IMessage message = event.getMessage();
-            try {
-                event.getMessage().delete();
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
 
             try {
                 if (message.getAuthor().getConnectedVoiceChannels().size() == 0) {
@@ -267,11 +246,7 @@ public class CommandListener {
                 Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (event.isCommand("skipall")) {
-            try {
-                event.getMessage().delete();
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
+
             audioPlayer.clear();
         } else if (event.isCommand("playlist")) {
             try {
@@ -281,43 +256,55 @@ public class CommandListener {
                 } else {
                     String qSongs = "Playlist: \n";
                     for (int i = 0; i < audioPlayer.getPlaylistSize(); i++) {
-                        qSongs += (i + 1) + ". " + getFileName(audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString()).replaceAll("_", " ") + "\n";
-
+                        qSongs += (i + 1) + ". " + getFileName(audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString()).replaceAll("_", " ").replaceAll("music", "").replace("\\", "") + "\n";
                     }
-
                     event.getMessage().getChannel().sendMessage(qSongs);
                 }
-
             } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                 Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } else if (event.isCommand("queue")) {
-
+        } else if (event.isCommand("queue") || event.isCommand("q")) {
             try {
 
                 String url = event.getArgs()[0];
                 String songName = "";
 
-                if (url.contains("http")) {
+                if (url.contains("http") || url.contains("https")) {
 
-                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "youtube-dl --get-filename -o %(title)s.%(ext)s --restrict-filenames " + url);
+                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames " + url);
                     builder2.redirectErrorStream(true);
                     Process p2 = builder2.start();
                     BufferedReader br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
                     songName = br2.readLine();
                     p2.waitFor();
-
+                    String save = songName;
                     songName = songName.replaceAll(".m4a", ".mp3");
                     songName = songName.replaceAll(".webm", ".mp3");
                     songName = songName.replaceAll(".mp4", ".mp3");
+                    
+                    System.out.println("SONGNAME IS "+songName);
+                    System.out.println("SAVE IS "+save);
                     if (!containsFile(songName)) {
                         System.out.println("FILE IS NOT ON FOLDER. START DOWNLOADING.");
-                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames " + url);
+                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames " + url);
                         builder.redirectErrorStream(true);
                         Process p = builder.start();
                         p.waitFor();
+
+                        System.out.println("THE COMMAND IS: cd " + Bot.executionPath + "\\music && ffmpeg -i " + save + " " + songName);
+                        ProcessBuilder builder7 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && ffmpeg -i " + save + " " + songName);
+                        builder7.redirectErrorStream(true);
+                        Process p7 = builder7.start();
+                        p7.waitFor();
+                        File file = new File("music\\" + save);
+
+                        file.delete();
                     }
-                    audioPlayer.queue(new File("C:\\AntaresMusic\\" + songName));
+                    else
+                    {
+                        System.out.println("WE ALREADY HAVE THE FILE");
+                    }
+                    audioPlayer.queue(new File("music\\" + songName));
 
                 } else {
 
@@ -327,7 +314,7 @@ public class CommandListener {
 
                     System.out.println("SONG NAME: " + url);
 
-                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "youtube-dl --get-filename -o %(id)s-%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-format mp3 -o %(id)s-%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                     builder2.redirectErrorStream(true);
                     Process p2 = builder2.start();
                     BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
@@ -337,19 +324,34 @@ public class CommandListener {
 
                     event.getMessage().getChannel().sendMessage(event.getMessage().getAuthor() + ". Queued: https://www.youtube.com/watch?v=" + extractVideoId(songName));
 
+                    songName = songName.replaceAll(extractVideoId(songName) + "-", "");
+                    String save2 = songName;
                     songName = songName.replaceAll(".m4a", ".mp3");
                     songName = songName.replaceAll(".webm", ".mp3");
                     songName = songName.replaceAll(".mp4", ".mp3");
-                    songName = songName.replaceAll(extractVideoId(songName) + "-", "");
 
                     if (!containsFile(songName)) {
                         System.out.println("FILE NOT FOUND. WILL BEGIN DOWNLOADING.");
-                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd \"C:\\AntaresMusic\" && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                         builder.redirectErrorStream(true);
                         Process p = builder.start();
                         p.waitFor();
+
+                        System.out.println("THE COMMAND IS: cd " + Bot.executionPath + "\\music && ffmpeg -i " + save2 + " " + songName);
+                        ProcessBuilder builder7 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && ffmpeg -i " + save2 + " " + songName);
+                        builder7.redirectErrorStream(true);
+                        Process p7 = builder7.start();
+                        p7.waitFor();
+                        File file = new File("music\\" + save2);
+
+                        file.delete();
+
                     }
-                    audioPlayer.queue(new File("C:\\AntaresMusic\\" + songName));
+                    else
+                    {
+                        System.out.println("WE ALREADY HAVE THE FILE");
+                    }
+                    audioPlayer.queue(new File("music\\" + songName));
 
                 }
 
@@ -359,7 +361,7 @@ public class CommandListener {
 
         } else if (event.isCommand("queuelocal")) {
             if (event.getArgs() == null) {
-                File folder = new File(Bot.musicPath);
+                File folder = new File("music");
                 File[] listOfFiles = folder.listFiles();
 
                 for (int i = 0; i < listOfFiles.length; i++) {
@@ -379,30 +381,15 @@ public class CommandListener {
 
         } else if (event.isCommand("pause")) {
 
-            try {
-                event.getMessage().delete();
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
             audioPlayer.setPaused(true);
 
         } else if (event.isCommand("resume")) {
 
-            try {
-                event.getMessage().delete();
-                audioPlayer.setPaused(false);
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            audioPlayer.setPaused(false);
 
         } else if (event.isCommand("skip")) {
 
-            try {
-                event.getMessage().delete();
-                audioPlayer.skip();
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            audioPlayer.skip();
 
         } else if (event.isCommand("loop")) {
 
@@ -427,11 +414,6 @@ public class CommandListener {
         } else if (event.isCommand("volume")) {
 
             IChannel channel = event.getMessage().getChannel();
-            try {
-                event.getMessage().delete();
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
 
             if (event.getArgs() != null) {
                 String volume = event.getArgs()[0];
@@ -440,7 +422,11 @@ public class CommandListener {
 
                     float finalVolume = (value / 100.0f);
                     if (Float.compare(finalVolume, 0) >= 0 && Float.compare(finalVolume, 1) <= 0) {
-
+                        try {
+                            event.getMessage().reply("The volume has been set to " + Math.round(finalVolume * 100) + "%");
+                        } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                         audioPlayer.setVolume(finalVolume);
                     } else {
                         try {
@@ -459,7 +445,7 @@ public class CommandListener {
                 }
             } else {
                 try {
-                    channel.sendMessage("The volume is currently set to " + audioPlayer.getVolume() * 100);
+                    channel.sendMessage("The volume is currently set to " + Math.round(audioPlayer.getVolume() * 100) + "%");
                 } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                     Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -467,40 +453,26 @@ public class CommandListener {
 
         } else if (event.isCommand("logout")) {
 
+            audioPlayer.clear();
+            audioPlayer.clean();
+
             try {
-                event.getMessage().delete();
-                audioPlayer.clear();
-                audioPlayer.clean();
-
                 client.logout();
-                System.exit(0);
-
-            } catch (RateLimitException | DiscordException | MissingPermissionsException ex) {
+            } catch (DiscordException ex) {
                 Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
             }
+            System.exit(0);
 
         }
-
-    }
-
-    //AUXILIARY METHODS
-    public boolean containsBotRole(List<IRole> roles) {
-        for (int i = 0; i < roles.size(); i++) {
-            IRole r = roles.get(i);
-            if (r.getName().equals(botRole)) {
-                return true;
-            }
-        }
-        return false;
 
     }
 
     public boolean containsFile(String fileName) {
-        File folder = new File(Bot.musicPath);
+        File folder = new File("music");
         File[] listOfFiles = folder.listFiles();
         for (int i = 0; i < listOfFiles.length; i++) {
             if (listOfFiles[i].isFile()) {
-                if (listOfFiles[i].toString().equals(Bot.musicPath + "\\" + fileName)) {
+                if (listOfFiles[i].toString().equals("music" + "\\" + fileName)) {
                     return true;
                 }
 
@@ -542,6 +514,13 @@ public class CommandListener {
 
         }
         return id;
+    }
+
+    private boolean containsBotRole(String id) {
+        if (Bot.permissions.contains(id)) {
+            return true;
+        }
+        return false;
     }
 
 }
