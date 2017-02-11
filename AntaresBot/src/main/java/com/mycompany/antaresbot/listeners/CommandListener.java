@@ -13,8 +13,10 @@ import static com.mycompany.antaresbot.main.Bot.owner;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -271,7 +273,7 @@ public class CommandListener {
 
                 if (url.contains("http") || url.contains("https")) {
 
-                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames " + url);
+                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-quality 0 -o %(title)s.%(ext)s --restrict-filenames " + url);
                     builder2.redirectErrorStream(true);
                     Process p2 = builder2.start();
                     BufferedReader br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
@@ -281,12 +283,12 @@ public class CommandListener {
                     songName = songName.replaceAll(".m4a", ".mp3");
                     songName = songName.replaceAll(".webm", ".mp3");
                     songName = songName.replaceAll(".mp4", ".mp3");
-                    
-                    System.out.println("SONGNAME IS "+songName);
-                    System.out.println("SAVE IS "+save);
+
+                    System.out.println("SONGNAME IS " + songName);
+                    System.out.println("SAVE IS " + save);
                     if (!containsFile(songName)) {
                         System.out.println("FILE IS NOT ON FOLDER. START DOWNLOADING.");
-                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames " + url);
+                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-quality 0 -o %(title)s.%(ext)s --restrict-filenames " + url);
                         builder.redirectErrorStream(true);
                         Process p = builder.start();
                         p.waitFor();
@@ -299,9 +301,7 @@ public class CommandListener {
                         File file = new File("music\\" + save);
 
                         file.delete();
-                    }
-                    else
-                    {
+                    } else {
                         System.out.println("WE ALREADY HAVE THE FILE");
                     }
                     audioPlayer.queue(new File("music\\" + songName));
@@ -314,7 +314,7 @@ public class CommandListener {
 
                     System.out.println("SONG NAME: " + url);
 
-                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename --extract-audio --audio-format mp3 -o %(id)s-%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --get-filename -o %(id)s-%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                     builder2.redirectErrorStream(true);
                     Process p2 = builder2.start();
                     BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
@@ -326,13 +326,13 @@ public class CommandListener {
 
                     songName = songName.replaceAll(extractVideoId(songName) + "-", "");
                     String save2 = songName;
-                    songName = songName.replaceAll(".m4a", ".mp3");
-                    songName = songName.replaceAll(".webm", ".mp3");
-                    songName = songName.replaceAll(".mp4", ".mp3");
+                    //songName = songName.replaceAll(".m4a", ".mp3");
+                    //songName = songName.replaceAll(".webm", ".mp3");
+                    //songName = songName.replaceAll(".mp4", ".mp3");
 
                     if (!containsFile(songName)) {
                         System.out.println("FILE NOT FOUND. WILL BEGIN DOWNLOADING.");
-                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl --extract-audio --audio-format mp3 -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && youtube-dl -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
                         builder.redirectErrorStream(true);
                         Process p = builder.start();
                         p.waitFor();
@@ -341,14 +341,21 @@ public class CommandListener {
                         ProcessBuilder builder7 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\music && ffmpeg -i " + save2 + " " + songName);
                         builder7.redirectErrorStream(true);
                         Process p7 = builder7.start();
+
+                        //Read out dir output
+                        InputStream is = p7.getInputStream();
+                        InputStreamReader isr = new InputStreamReader(is);
+                        BufferedReader br = new BufferedReader(isr);
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            System.out.println(line);
+                        }
                         p7.waitFor();
                         File file = new File("music\\" + save2);
 
                         file.delete();
 
-                    }
-                    else
-                    {
+                    } else {
                         System.out.println("WE ALREADY HAVE THE FILE");
                     }
                     audioPlayer.queue(new File("music\\" + songName));
