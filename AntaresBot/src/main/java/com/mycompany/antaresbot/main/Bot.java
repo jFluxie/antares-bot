@@ -110,21 +110,14 @@ public class Bot {
                     String value[] = line.split(":");
                     if(value.length>1)
                     {
-                        //If we only have 1 permission
-                        if(value.length==2)
-                        {
-                            permissions.add(value[1]);
-                        }
-                        //multiple permissions
-                        else
-                        {
+                            
                             String val[]=value[1].split(",");
                             for(int i=0;i<val.length;i++)
                             {
                                 permissions.add(val[i]);
                             }
-                            
-                        }
+                        
+
                     }
                 }
                 

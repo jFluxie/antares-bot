@@ -1,4 +1,4 @@
-guild:182651110756974592
-token:MjE1ODc4MTk1NjUwNjI1NTM3.CsBGGg.C5fJqgNFu0mTJNTs7g5bk2D6AUk
-owner:182648894398660608
-permissions:124966199669948418
+guild:
+token:
+owner:
+permissions:
