@@ -42,9 +42,6 @@ public class CommandListener {
     //Any user can use these commands
     private ArrayList<String> commands;
 
-    //Only user with bot Role can use this commands
-    private ArrayList<String> botRoleCommands;
-
     //Only owner can use these commands
     private ArrayList<String> botOwnerCommands;
 
@@ -52,55 +49,36 @@ public class CommandListener {
 
     private IGuild guild;
 
-    private boolean playlistLoop;
+    private ProcessBuilder builder;
 
     public CommandListener(IDiscordClient client) {
 
         commands = new ArrayList<String>();
-        botRoleCommands = new ArrayList<String>();
         botOwnerCommands = new ArrayList<String>();
 
-        //TBH this is awful.
-        commands.add("ping");
-        commands.add("playlist");
-
-        botRoleCommands.add("ping");
-        botRoleCommands.add("playlist");
-        botRoleCommands.add("queue");
-        botRoleCommands.add("q");
-        botRoleCommands.add("skip");
-        botRoleCommands.add("skipall");
-        botRoleCommands.add("pause");
-        botRoleCommands.add("resume");
-        botRoleCommands.add("volume");
-        botRoleCommands.add("loop");
-        botRoleCommands.add("shuffle");
-
-        botOwnerCommands.add("ping");
-        botOwnerCommands.add("playlist");
+        botOwnerCommands.add("logout");
+        botOwnerCommands.add("qall");
         botOwnerCommands.add("join");
         botOwnerCommands.add("leave");
-        botOwnerCommands.add("queue");
-        botOwnerCommands.add("q");
-        botOwnerCommands.add("queuelocal");
-        botOwnerCommands.add("skip");
-        botOwnerCommands.add("skipall");
-        botOwnerCommands.add("pause");
-        botOwnerCommands.add("resume");
-        botOwnerCommands.add("volume");
-        botOwnerCommands.add("loop");
-        botOwnerCommands.add("shuffle");
-        botOwnerCommands.add("logout");
 
+        commands.add("playlist");
+        commands.add("q");
+        commands.add("skip");
+        commands.add("skipall");
+        commands.add("pause");
+        commands.add("resume");
+        commands.add("volume");
+        commands.add("shuffle");
 
+        builder = new ProcessBuilder();
         guild = client.getGuildByID(Bot.guildId);
-        playlistLoop = false;
         client.getDispatcher().registerListener(this);
     }
 
     @EventSubscriber
     public void watchForCommands(MessageReceivedEvent event) {
-        try {
+        RequestBuffer.request(()
+                -> {
 
             IMessage message = event.getMessage();
             String content = message.getContent();
@@ -120,9 +98,7 @@ public class CommandListener {
             CommandExecutionEvent _event = new CommandExecutionEvent(message, command, message.getAuthor(), args);
             Bot.client.getDispatcher().dispatch(_event);
 
-        } catch (Exception ex) {
-            // Handle how ever you please
-        }
+        });
     }
 
     @EventSubscriber
@@ -130,15 +106,14 @@ public class CommandListener {
 
         RequestBuffer.request(()
                 -> {
-            if (botOwnerCommands.contains(event.getCommand())) {
+            if (commands.contains(event.getCommand()) || botOwnerCommands.contains(event.getCommand())) {
 
                 if (String.valueOf(event.getBy().getID()).equals(owner)) {
                     executeCommand(event);
                 } else if (!Bot.permissions.isEmpty() && containsBotRole(event.getBy().getID())) {
-                    if (botRoleCommands.contains(event.getCommand())) {
+                    if (!botOwnerCommands.contains(event.getCommand())) {
                         executeCommand(event);
                     } else {
-
                         try {
                             IMessage temp = event.getMessage();
                             IPrivateChannel channel = client.getOrCreatePMChannel(client.getUserByID(temp.getAuthor().getID()));
@@ -148,8 +123,6 @@ public class CommandListener {
                         }
                     }
 
-                } else if (commands.contains(event.getCommand())) {
-                    executeCommand(event);
                 } else {
                     try {
                         IMessage temp = event.getMessage();
@@ -175,310 +148,307 @@ public class CommandListener {
     }
 
     public void executeCommand(CommandExecutionEvent event) {
-         if (event.isCommand("ping")) {
-            try {
-                event.getMessage().reply("Pong!");
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else if (event.isCommand("join")) {
 
-            try {
+        RequestBuffer.request(()
+                -> {
 
+            if (event.isCommand("join")) {
+
+                try {
+
+                    IMessage message = event.getMessage();
+
+                    if (message.getAuthor().getConnectedVoiceChannels().isEmpty()) {
+                        event.getMessage().getChannel().sendMessage(event.getBy() + ". Im sorry you are currently not in a channel. Try again");
+                    } else {
+                        try {
+                            event.getMessage().reply("Ok.");
+                        } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        message.getAuthor().getConnectedVoiceChannels().get(0).join();
+                    }
+
+                } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else if (event.isCommand("leave")) {
                 IMessage message = event.getMessage();
 
-                if (message.getAuthor().getConnectedVoiceChannels().isEmpty()) {
-                    event.getMessage().getChannel().sendMessage(event.getBy() + ". Im sorry you are currently not in a channel. Try again");
-                } else {
-                    try {
-                event.getMessage().reply("Ok.");
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-                    message.getAuthor().getConnectedVoiceChannels().get(0).join();
-                }
-
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else if (event.isCommand("leave")) {
-            IMessage message = event.getMessage();
-            
-            try {
-                event.getMessage().reply("Ok.");
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            try {
-                if (message.getAuthor().getConnectedVoiceChannels().size() == 0) {
-                    new MessageBuilder(Bot.client).withChannel(event.getMessage().getChannel()).withContent(event.getBy() + " .Im sorry, you are currently not in a channel. Try again.").build();
-                } else {
-                    message.getAuthor().getConnectedVoiceChannels().get(0).leave();
-
-                }
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else if (event.isCommand("skipall")) {
-            try {
-                event.getMessage().reply("Ok.");
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            Bot.audioPlayer.clear();
-        } else if (event.isCommand("playlist")) {
-            try {
-                if (Bot.audioPlayer.getCurrentTrack() == null) {
-
-                    event.getMessage().getChannel().sendMessage("There are no songs currently on queue.");
-                } else {
-                    String qSongs = "Playlist: \n";
-                    for (int i = 0; i < Bot.audioPlayer.getPlaylistSize(); i++) {
-                        qSongs += (i + 1) + ". " + getFileName(Bot.audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString()).replaceAll("_", " ").replaceAll("music", "").replace("\\", "").replace(".wav", "") + "\n";
-                    }
-                    event.getMessage().getChannel().sendMessage(qSongs);
-                }
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else if (event.isCommand("queue") || event.isCommand("q")) {
-            try {
-
-                String url = event.getArgs()[0];
-                String songName = "";
-
-                if (url.contains("http") || url.contains("https")) {
-
-                    //GET SONG NAME
-                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\lib && youtube-dl --get-filename --extract-audio --audio-format wav -o %(title)s.%(ext)s --restrict-filenames " + url);
-                    builder2.redirectErrorStream(true);
-                    Process p2 = builder2.start();
-                    BufferedReader br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
-                    songName = br2.readLine();
-                    p2.waitFor();
-                            
-                    songName = songName.replaceAll(".m4a", ".wav");
-                    songName = songName.replaceAll(".webm", ".wav");
-                    songName = songName.replaceAll(".mp4", ".wav");
-
-                    System.out.println("SONGNAME IS " + songName);
-                    
-                    //CHECK IF WE HAVE THE SONG
-                    if (!containsFile(songName)) {
-                        //FIRST DOWNLOAD THE SONG
-                        System.out.println("FILE IS NOT ON FOLDER. START DOWNLOADING.");
-                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\lib && youtube-dl --extract-audio --audio-format wav -o %(title)s.%(ext)s --restrict-filenames " + url);
-                        builder.redirectErrorStream(true);
-                        Process p = builder.start();
-                        InputStream is = p.getInputStream();
-                        InputStreamReader isr = new InputStreamReader(is);
-                        BufferedReader br = new BufferedReader(isr);
-                        String line;
-                        while ((line = br.readLine()) != null) {
-                            System.out.println(line);
-                        }
-                        
-                        p.waitFor();
-                        
-                    } else {
-                        System.out.println("WE ALREADY HAVE THE FILE");
-                    }
-                    //Move file to music directory
-                    File song = new File("lib\\"+songName);
-                    song.renameTo(new File("music\\"+songName));
-                    
-                    Bot.audioPlayer.queue(new File("music\\" + songName));
-
-                } else {
-
-                    for (int i = 1; i < event.getArgs().length; i++) {
-                        url += "+" + event.getArgs()[i];
-                    }
-
-                    System.out.println("SONG NAME: " + url);
-
-                    ProcessBuilder builder2 = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\lib && youtube-dl --get-filename --extract-audio --audio-format wav -o %(id)s:%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
-                    builder2.redirectErrorStream(true);
-                    Process p2 = builder2.start();
-                    BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
-                    songName = r.readLine();
-                    p2.waitFor();
-                    System.out.println("SONG NAME2: " + songName);
-
-
-                    event.getMessage().getChannel().sendMessage(event.getMessage().getAuthor() + ". Queued: https://www.youtube.com/watch?v=" + extractVideoId(songName));
-
-                    songName = songName.replaceAll(extractVideoId(songName) + "#", "");
-                    String save2 = songName;
-                    songName = songName.replaceAll(".m4a", ".wav");
-                    songName = songName.replaceAll(".webm", ".wav");
-                    songName = songName.replaceAll(".mp4", ".wav");
-
-                    if (!containsFile(songName)) {
-                        System.out.println("FILE NOT FOUND. WILL BEGIN DOWNLOADING.");
-                        ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", "cd " + Bot.executionPath + "\\lib && youtube-dl --extract-audio --audio-format wav -o %(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
-                        builder.redirectErrorStream(true);
-                        Process p = builder.start();
-                        
-                        InputStream is = p.getInputStream();
-                        InputStreamReader isr = new InputStreamReader(is);
-                        BufferedReader br = new BufferedReader(isr);
-                        String line;
-                        while ((line = br.readLine()) != null) {
-                            System.out.println(line);
-                        }
-                        p.waitFor();
-                      
-
-                    } else {
-                        System.out.println("WE ALREADY HAVE THE FILE");
-                    }
-                    //Move file to music directory
-                    File song = new File("lib\\"+songName);
-                    song.renameTo(new File("music\\"+songName));
-                    
-                    System.out.println("NOW PLAYING...");
-                    Bot.audioPlayer.queue(new File("music\\" + songName));
-
-                }
-
-            } catch (IOException | UnsupportedAudioFileException | InterruptedException | MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        } else if (event.isCommand("queuelocal")) {
-            if (event.getArgs() == null) {
-                File folder = new File("music");
-                File[] listOfFiles = folder.listFiles();
-
-                for (int i = 0; i < listOfFiles.length; i++) {
-                    if (listOfFiles[i].isFile() && getFileExt(listOfFiles[i].toString()).equals("wav")) {
-
-                        try {
-                            Bot.audioPlayer.queue(new File(listOfFiles[i].toString()));
-                        } catch (UnsupportedAudioFileException | IOException ex) {
-                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                }
-
-            } else {
-                //
-            }
-
-        } else if (event.isCommand("pause")) {
-            try {
-                event.getMessage().reply("Ok.");
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            Bot.audioPlayer.setPaused(true);
-
-        } else if (event.isCommand("resume")) {
-            try {
-                event.getMessage().reply("Ok.");
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            Bot.audioPlayer.setPaused(false);
-
-        } else if (event.isCommand("skip")) {
-            try {
-                event.getMessage().reply("Ok.");
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            Bot.audioPlayer.skip();
-
-        } else if (event.isCommand("loop")) {
-
-            if (playlistLoop == false) {
-                Bot.audioPlayer.setLoop(true);
-                playlistLoop = true;
                 try {
-                    event.getMessage().getChannel().sendMessage("Playlist is on loop.");
-                } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            } else {
-                Bot.audioPlayer.setLoop(false);
-                playlistLoop = false;
-                try {
-                    event.getMessage().getChannel().sendMessage("Playlist is not on loop.");
+                    event.getMessage().reply("Ok.");
                 } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                     Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
-            }
-        } else if (event.isCommand("volume")) {
-
-            IChannel channel = event.getMessage().getChannel();
-
-            if (event.getArgs() != null) {
-                String volume = event.getArgs()[0];
-                if (!volume.isEmpty() && volume != null) {
-                    Integer value = Integer.parseInt(event.getArgs()[0]);
-
-                    float finalVolume = (value / 100.0f);
-                    if (Float.compare(finalVolume, 0) >= 0 && Float.compare(finalVolume, 1) <= 0) {
-                        try {
-                            event.getMessage().reply("The volume has been set to " + Math.round(finalVolume * 100) + "%");
-                        } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        Bot.audioPlayer.setVolume(finalVolume);
+                try {
+                    if (message.getAuthor().getConnectedVoiceChannels().size() == 0) {
+                        new MessageBuilder(Bot.client).withChannel(event.getMessage().getChannel()).withContent(event.getBy() + " .Im sorry, you are currently not in a channel. Try again.").build();
                     } else {
-                        try {
-                            channel.sendMessage("Volume values must be between 0 and 100!");
-                        } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        message.getAuthor().getConnectedVoiceChannels().get(0).leave();
+
+                    }
+                } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else if (event.isCommand("skipall")) {
+                try {
+                    event.getMessage().reply("Ok.");
+                } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                Bot.audioPlayer.clear();
+            } else if (event.isCommand("playlist")) {
+                try {
+                    if (Bot.audioPlayer.getCurrentTrack() == null) {
+
+                        event.getMessage().getChannel().sendMessage("There are no songs currently on queue.");
+                    } else {
+                        String qSongs = "Playlist: \n";
+                        for (int i = 0; i < Bot.audioPlayer.getPlaylistSize(); i++) {
+                            qSongs += (i + 1) + ". " + getFileName(Bot.audioPlayer.getPlaylist().get(i).getMetadata().get("file").toString()).replaceAll("_", " ").replaceAll("music", "").replace("\\", "").replace(".wav", "") + "\n";
+                        }
+                        event.getMessage().getChannel().sendMessage(qSongs);
+                    }
+                } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else if (event.isCommand("q")) {
+                try {
+
+                    String url = event.getArgs()[0];
+                    String songName = "";
+
+                    if (url.contains("http") || url.contains("https")) {
+
+                        //GET SONG NAME
+                        builder.command("cmd.exe", "/c", "cd " + Bot.executionPath + "\\lib && youtube-dl --get-filename --extract-audio "
+                                + "--audio-format wav -o %(title)s.%(ext)s --restrict-filenames " + url);
+                        builder.redirectErrorStream(true);
+                        Process p2 = builder.start();
+                        BufferedReader br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
+                        songName = br2.readLine();
+                        p2.waitFor();
+
+                        songName = songName.replaceAll(".m4a", ".wav");
+                        songName = songName.replaceAll(".webm", ".wav");
+                        songName = songName.replaceAll(".mp4", ".wav");
+
+                        System.out.println("SONGNAME IS " + songName);
+
+                        //CHECK IF WE HAVE THE SONG
+                        if (!containsFile(songName)) {
+                            //FIRST DOWNLOAD THE SONG
+                            System.out.println("FILE IS NOT ON FOLDER. START DOWNLOADING.");
+                            builder.command("cmd.exe", "/c", "cd " + Bot.executionPath + "\\lib && youtube-dl --extract-audio "
+                                    + "--audio-format wav -o %(title)s.%(ext)s --restrict-filenames " + url);
+                            builder.redirectErrorStream(true);
+                            Process p = builder.start();
+                            InputStream is = p.getInputStream();
+                            InputStreamReader isr = new InputStreamReader(is);
+                            BufferedReader br = new BufferedReader(isr);
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                System.out.println(line);
+                            }
+
+                            p.waitFor();
+
+                        } else {
+                            System.out.println("WE ALREADY HAVE THE FILE");
+                        }
+                        //Move file to music directory
+                        File song = new File("lib\\" + songName);
+                        song.renameTo(new File("music\\" + songName));
+
+                        Bot.audioPlayer.queue(new File("music\\" + songName));
+
+                    } else {
+
+                        for (int i = 1; i < event.getArgs().length; i++) {
+                            url += "+" + event.getArgs()[i];
+                        }
+
+                        System.out.println("SONG NAME: " + url);
+
+                        builder.command("cmd.exe", "/c", "cd " + Bot.executionPath + "\\lib && youtube-dl --get-filename --extract-audio --audio-format wav -o "
+                                + "%(id)s:%(title)s.%(ext)s --restrict-filenames --default-search ytsearch: " + url);
+                        builder.redirectErrorStream(true);
+                        Process p2 = builder.start();
+                        BufferedReader r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
+                        songName = r.readLine();
+                        p2.waitFor();
+                        System.out.println("SONG NAME2: " + songName);
+
+                        event.getMessage().getChannel().sendMessage(event.getMessage().getAuthor() + ". Queued: https://www.youtube.com/watch?v=" + extractVideoId(songName));
+
+                        songName = songName.replaceAll(extractVideoId(songName) + "#", "");
+                        String save2 = songName;
+                        songName = songName.replaceAll(".m4a", ".wav");
+                        songName = songName.replaceAll(".webm", ".wav");
+                        songName = songName.replaceAll(".mp4", ".wav");
+
+                        if (!containsFile(songName)) {
+                            System.out.println("FILE NOT FOUND. WILL BEGIN DOWNLOADING.");
+                            builder.command("cmd.exe", "/c", "cd " + Bot.executionPath + "\\lib && youtube-dl --extract-audio --audio-format wav -o %(title)s.%(ext)s "
+                                    + "--restrict-filenames --default-search ytsearch: " + url);
+                            builder.redirectErrorStream(true);
+                            Process p = builder.start();
+
+                            InputStream is = p.getInputStream();
+                            InputStreamReader isr = new InputStreamReader(is);
+                            BufferedReader br = new BufferedReader(isr);
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                System.out.println(line);
+                            }
+                            p.waitFor();
+
+                        } else {
+                            System.out.println("WE ALREADY HAVE THE FILE");
+                        }
+                        //Move file to music directory
+                        File song = new File("lib\\" + songName);
+                        song.renameTo(new File("music\\" + songName));
+
+                        System.out.println("NOW PLAYING...");
+                        Bot.audioPlayer.queue(new File("music\\" + songName));
+
+                    }
+
+                } catch (IOException | UnsupportedAudioFileException | InterruptedException | MissingPermissionsException | RateLimitException | DiscordException ex) {
+                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            } else if (event.isCommand("qall")) {
+                if (event.getArgs() == null) {
+                    File folder = new File("music");
+                    File[] listOfFiles = folder.listFiles();
+
+                    for (int i = 0; i < listOfFiles.length; i++) {
+                        if (listOfFiles[i].isFile() && getFileExt(listOfFiles[i].toString()).equals("wav")) {
+
+                            try {
+                                Bot.audioPlayer.queue(new File(listOfFiles[i].toString()));
+                            } catch (UnsupportedAudioFileException | IOException ex) {
+                                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
                     }
+
                 } else {
+                    //
+                }
+
+            } else if (event.isCommand("pause")) {
+                try {
+                    event.getMessage().reply("Ok.");
+                } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                Bot.audioPlayer.setPaused(true);
+
+            } else if (event.isCommand("resume")) {
+                try {
+                    event.getMessage().reply("Ok.");
+                } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                Bot.audioPlayer.setPaused(false);
+
+            } else if (event.isCommand("skip")) {
+                try {
+                    event.getMessage().reply("Ok.");
+                } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                Bot.audioPlayer.skip();
+
+            } else if (event.isCommand("loop")) {
+
+                if (!Bot.audioPlayer.isLooping()) {
+                    Bot.audioPlayer.setLoop(true);
                     try {
-                        channel.sendMessage("You must specify a volume value!" + Bot.audioPlayer.getVolume());
+                        event.getMessage().getChannel().sendMessage("Playlist is on loop.");
+                    } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                        Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } else {
+                    Bot.audioPlayer.setLoop(false);
+                    try {
+                        event.getMessage().getChannel().sendMessage("Playlist is not on loop.");
                     } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                         Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
                 }
-            } else {
+            } else if (event.isCommand("volume")) {
+
+                IChannel channel = event.getMessage().getChannel();
+
+                if (event.getArgs() != null) {
+                    String volume = event.getArgs()[0];
+                    if (!volume.isEmpty() && volume != null) {
+                        Integer value = Integer.parseInt(event.getArgs()[0]);
+
+                        float finalVolume = (value / 100.0f);
+                        if (Float.compare(finalVolume, 0) >= 0 && Float.compare(finalVolume, 1) <= 0) {
+                            try {
+                                event.getMessage().reply("The volume has been set to " + Math.round(finalVolume * 100) + "%");
+                            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            Bot.audioPlayer.setVolume(finalVolume);
+                        } else {
+                            try {
+                                channel.sendMessage("Volume values must be between 0 and 100!");
+                            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    } else {
+                        try {
+                            channel.sendMessage("You must specify a volume value!" + Bot.audioPlayer.getVolume());
+                        } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                            Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    }
+                } else {
+                    try {
+                        channel.sendMessage("The volume is currently set to " + Math.round(Bot.audioPlayer.getVolume() * 100) + "%");
+                    } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
+                        Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+            } else if (event.isCommand("logout")) {
+
+                Bot.audioPlayer.clear();
+                Bot.audioPlayer.clean();
+
                 try {
-                    channel.sendMessage("The volume is currently set to " + Math.round(Bot.audioPlayer.getVolume() * 100) + "%");
+                    event.getMessage().reply("Bye!");
+                    client.logout();
+                } catch (DiscordException | MissingPermissionsException | RateLimitException ex) {
+                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                System.exit(0);
+
+            } else if (event.isCommand("shuffle")) {
+                try {
+                    event.getMessage().reply("Ok.");
                 } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                     Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                Bot.audioPlayer.shuffle();
             }
 
-        } else if (event.isCommand("logout")) {
-
-            Bot.audioPlayer.clear();
-            Bot.audioPlayer.clean();
-
-            try {
-                event.getMessage().reply("Bye!");
-                client.logout();
-            } catch (DiscordException | MissingPermissionsException | RateLimitException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            System.exit(0);
-
-        }
-        else if(event.isCommand("shuffle"))
-        {
-            try {
-                event.getMessage().reply("Ok.");
-            } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            Bot.audioPlayer.shuffle();
-        }
-
+        });
     }
 
     public boolean containsFile(String fileName) {
