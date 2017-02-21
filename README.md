@@ -22,5 +22,5 @@ You must also have java installed on your machine (windows only!).
 6. ON permissions (optional): users that are able to use the bot. if only 1 user, just paste his id. If many users, paste ID, add a ',' and paste the next one, and so on.
 
 ##Running the bot
-1. Run AntaresBot-1.0-SNAPSHOT-shaded.jar.
+1. Run antaresbot.jar.
 2. To stop the bot, use !logout command.
