@@ -176,18 +176,16 @@ public class CommandListener {
                 IMessage message = event.getMessage();
 
                 try {
-                    event.getMessage().reply("Ok.");
-                } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
-                    Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-                try {
-                    if (message.getAuthor().getConnectedVoiceChannels().size() == 0) {
-                        new MessageBuilder(Bot.client).withChannel(event.getMessage().getChannel()).withContent(event.getBy() + " .Im sorry, you are currently not in a channel. Try again.").build();
-                    } else {
-                        message.getAuthor().getConnectedVoiceChannels().get(0).leave();
-
+                    
+                    if(Bot.client.getOurUser().getConnectedVoiceChannels().size()>0){
+                        event.getMessage().reply("I'm out.");
+                        Bot.client.getOurUser().getConnectedVoiceChannels().get(0).leave();
                     }
+                    else{
+                        event.getMessage().reply("I'm not in a voice channel.");
+                    }
+                    
+
                 } catch (MissingPermissionsException | RateLimitException | DiscordException ex) {
                     Logger.getLogger(CommandListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
